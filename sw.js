@@ -1,75 +1,61 @@
-const CACHE_NAME = 'nida-shop-v2.3';
+const CACHE_NAME = 'nida-shop-v2.9';
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './index_3d.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  './rabbit.jfif',
-  './rabbit.jpg'
+  './', './index.html', './style.css', './app.js',
+  './manifest.json', './icon-192.png', './icon-512.png', './rabbit.jpg'
 ];
+const CORE = ['index.html', 'style.css', 'app.js', 'manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS_TO_CACHE)).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
+function put(req, res) {
+  // Accept normal and opaque (cross-origin no-cors, e.g. Google Fonts) responses
+  if (res && (res.status === 200 || res.type === 'opaque')) {
+    const copy = res.clone();
+    caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+  }
+  return res;
+}
+
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
+  if (url.origin !== location.origin && !isFont) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached, and asynchronously fetch update for next time
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse.clone());
-            });
-          }
-        }).catch(() => {
-          // offline, ignore
-        });
-        return cachedResponse;
-      }
+  const isCore = req.mode === 'navigate' || CORE.some((f) => url.pathname.endsWith('/' + f)) || url.pathname.endsWith('/');
 
-      return fetch(event.request).then((networkResponse) => {
-        // Cache external assets like Google Fonts if successful
-        if (networkResponse && networkResponse.status === 200) {
-          const url = event.request.url;
-          if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com')) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-        }
-        return networkResponse;
-      }).catch(() => {
-        // If offline and request is for navigation, fallback to cached index.html
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html').then((res) => res || caches.match('./'));
-        }
-      });
-    })
-  );
+  if (isFont) {
+    // stale-while-revalidate for fonts
+    event.respondWith(
+      caches.match(req).then((hit) => {
+        const net = fetch(req).then((r) => put(req, r)).catch(() => hit);
+        return hit || net;
+      })
+    );
+  } else if (isCore) {
+    // network-first so updates land immediately; cache fallback when offline
+    event.respondWith(
+      fetch(req).then((r) => put(req, r)).catch(() =>
+        caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match('./index.html'))
+      )
+    );
+  } else {
+    // cache-first for images/icons (cache name is bumped on release)
+    event.respondWith(
+      caches.match(req).then((hit) => hit || fetch(req).then((r) => put(req, r)))
+    );
+  }
 });

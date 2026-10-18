@@ -11,9 +11,9 @@
   "icons": [
     {
       "src": "rabbit.jpg",
-      "sizes": "1500x1500",
+      "sizes": "800x800",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "icon-192.png",
