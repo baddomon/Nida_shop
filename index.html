@@ -1383,24 +1383,78 @@ const SoundFX = {
     });
   },
 
-  // Chewing sound
+  // Realistic cartoon chewing & crunch sound ("กรุบ! กรับ! ง่ำ ๆๆ")
   munch() {
     if (!soundEnabled) return;
     const ctx = getAudioContext();
     if (!ctx) return;
-    [0, 0.11, 0.22].forEach(t => {
+
+    // Generate crisp textured crunch noise
+    const bufferSize = Math.floor(ctx.sampleRate * 0.08);
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.022));
+    }
+
+    // 4 distinct crispy chewing bites
+    const bites = [
+      { time: 0.00, noiseFreq: 2400, toneFreq: 340, vol: 0.35 },
+      { time: 0.14, noiseFreq: 2000, toneFreq: 280, vol: 0.30 },
+      { time: 0.28, noiseFreq: 1700, toneFreq: 250, vol: 0.28 },
+      { time: 0.42, noiseFreq: 1400, toneFreq: 210, vol: 0.25 }
+    ];
+
+    bites.forEach(b => {
+      const startTime = ctx.currentTime + b.time;
+
+      // 1. Crisp texture burst
+      const noise = ctx.createBufferSource();
+      noise.buffer = noiseBuffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(b.noiseFreq, startTime);
+      filter.Q.setValueAtTime(3.2, startTime);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(b.vol, startTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.06);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noise.start(startTime);
+      noise.stop(startTime + 0.07);
+
+      // 2. Chomp mouth body resonance
       const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(400, ctx.currentTime + t);
-      osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + t + 0.08);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime + t);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + t + 0.08);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + t);
-      osc.stop(ctx.currentTime + t + 0.09);
+      const toneGain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(b.toneFreq, startTime);
+      osc.frequency.exponentialRampToValueAtTime(80, startTime + 0.07);
+
+      toneGain.gain.setValueAtTime(b.vol * 0.6, startTime);
+      toneGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.07);
+
+      osc.connect(toneGain);
+      toneGain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.08);
     });
+
+    // 3. Cute swallow gulp sound at the end
+    const swallowTime = ctx.currentTime + 0.54;
+    const swallowOsc = ctx.createOscillator();
+    const swallowGain = ctx.createGain();
+    swallowOsc.type = 'sine';
+    swallowOsc.frequency.setValueAtTime(280, swallowTime);
+    swallowOsc.frequency.exponentialRampToValueAtTime(540, swallowTime + 0.08);
+    swallowGain.gain.setValueAtTime(0.18, swallowTime);
+    swallowGain.gain.exponentialRampToValueAtTime(0.001, swallowTime + 0.1);
+    swallowOsc.connect(swallowGain);
+    swallowGain.connect(ctx.destination);
+    swallowOsc.start(swallowTime);
+    swallowOsc.stop(swallowTime + 0.1);
   },
 
   // Boing spring sound
@@ -1850,7 +1904,7 @@ function feedBunny(treat, event) {
     launchConfetti(25);
     setTimeout(() => {
       speakText(treat.talk, 1.48, 0.88);
-    }, 450);
+    }, 750);
   });
 }
 
