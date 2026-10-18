@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ff7eb6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ร้านนิดา">
+<link rel="apple-touch-icon" href="rabbit.jpg">
+<link rel="manifest" href="manifest.json">
+<title>🐰 ร้านน้องนิดา 2.0 | เล่นขายของ & พูดคุย</title>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg1: #ffe8f3;
+  --bg2: #e0f2ff;
+  --bg3: #fff6e0;
+  --card: #ffffff;
+  --ink: #552755;
+  --ink-light: #7a467a;
+  --b1: #ff65a5;
+  --b2: #ff9e2c;
+  --b3: #3ec992;
+  --b4: #5a8fff;
+  --b5: #b05cff;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg1: #2a1534;
+    --bg2: #16243d;
+    --bg3: #2d241c;
+    --card: #281d38;
+    --ink: #fff0fa;
+    --ink-light: #d8b7cf;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  font-family: 'Mali', 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(145deg, var(--bg1), var(--bg2), var(--bg3), var(--bg1));
+  background-size: 300% 300%;
+  animation: bgGrad 18s ease infinite;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes bgGrad {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ============================================================
+   TOP BAR (Compact Header)
+   ============================================================ */
+header {
+  height: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8px);
+  border-bottom: 1.5px solid rgba(255, 126, 182, 0.2);
+  z-index: 10;
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-shadow: 0 1px 4px rgba(255, 126, 182, 0.3);
+}
+
+.top-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pill-btn {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(255, 126, 182, 0.35);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: transform 0.1s;
+}
+.pill-btn:active { transform: scale(0.94); }
+
+/* PWA Install Banner */
+#installBanner {
+  display: none;
+  background: linear-gradient(135deg, #ff7eb6, #ffb347);
+  color: #fff;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  align-items: center;
+  justify-content: space-between;
+}
+#installBanner button {
+  background: #fff;
+  color: #d94a6e;
+  border: 0;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* ============================================================
+   MAIN APP LAYOUT (SPLIT VIEW)
+   ============================================================ */
+.app-container {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  height: calc(100vh - 44px);
+  height: calc(100dvh - 44px);
+}
+
+/* --- LEFT PANEL: BUNNY CHARACTER & SPEECH (ALWAYS VISIBLE) --- */
+.char-panel {
+  flex: 0 0 42%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  position: relative;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.45) 0%, transparent 70%);
+}
+
+.stage {
+  position: relative;
+  width: min(100%, 320px);
+  max-height: calc(100% - 65px);
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 3D Fluffy Rabbit Card Frame */
+.bunny-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(255, 126, 182, 0.28), 0 0 0 4px rgba(255, 255, 255, 0.95);
+  background: #fde59b;
+  transform-origin: center bottom;
+  animation: bunnyIdle 3.2s ease-in-out infinite;
+  transition: box-shadow 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.bunny-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* Speaking Aura Glow */
+#stage.speaking .bunny-card {
+  box-shadow: 0 0 25px rgba(255, 101, 165, 0.65), 0 0 0 5px #ff7eb6;
+}
+
+/* Interactive touch target for tummy */
+#bunnyTummy {
+  position: absolute;
+  width: 44%;
+  height: 30%;
+  bottom: 12%;
+  left: 28%;
+  cursor: pointer;
+  border-radius: 50%;
+  z-index: 5;
+}
+
+/* Target mouth coordinates for feeding */
+#mouthTarget {
+  position: absolute;
+  width: 20%;
+  height: 12%;
+  top: 48%;
+  left: 40%;
+  pointer-events: none;
+}
+
+/* Floating Price Tag Badge */
+.price-tag-badge {
+  position: absolute;
+  right: -4px;
+  bottom: 18px;
+  background: linear-gradient(135deg, #ffe27a, #ff9e2c);
+  color: #8c2a00;
+  border: 3px solid #ffffff;
+  border-radius: 18px;
+  padding: 4px 12px;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
+}
+.price-tag-badge.show {
+  opacity: 1;
+  transform: scale(1);
+  animation: tagBounce 0.8s ease-in-out infinite alternate;
+}
+@keyframes tagBounce {
+  0% { transform: translateY(0) rotate(2deg); }
+  100% { transform: translateY(-5px) rotate(-2deg); }
+}
+
+/* Floating Hearts & Stars */
+.hearts-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 8;
+}
+.hearts-burst span {
+  position: absolute;
+  font-size: 28px;
+  animation: heartFloat 1.8s ease-out infinite;
+}
+.hearts-burst span:nth-child(1) { left: 10%; bottom: 35%; animation-delay: 0s; }
+.hearts-burst span:nth-child(2) { right: 8%; bottom: 42%; animation-delay: 0.5s; }
+.hearts-burst span:nth-child(3) { left: 45%; top: -8px; animation-delay: 1s; }
+@keyframes heartFloat {
+  0% { transform: translateY(10px) scale(0.6); opacity: 0; }
+  30% { opacity: 1; transform: translateY(-10px) scale(1.1); }
+  100% { transform: translateY(-45px) scale(0.9); opacity: 0; }
+}
+
+.star {
+  position: absolute;
+  font-size: 24px;
+  pointer-events: none;
+  animation: tw 2.4s ease-in-out infinite;
+  z-index: 4;
+}
+@keyframes tw {
+  0%, 100% { transform: scale(0.6) rotate(0deg); opacity: 0.35; }
+  50% { transform: scale(1.25) rotate(25deg); opacity: 0.95; }
+}
+
+/* ============================================================
+   BUNNY ANIMATIONS
+   ============================================================ */
+@keyframes bunnyIdle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.015); }
+}
+
+.act-1 #bunnyCard { animation: bunnyHop 0.5s ease-in-out infinite; }
+@keyframes bunnyHop {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-18px) scale(1.04) rotate(2deg); }
+}
+
+.act-2 #bunnyCard { animation: bunnyTilt 1.2s ease-in-out infinite; }
+@keyframes bunnyTilt {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(4deg) translateY(-4px); }
+}
+
+.act-3 #bunnyCard { animation: bunnyNod 0.7s ease-in-out infinite; }
+@keyframes bunnyNod {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px) scale(1.02); }
+}
+
+.act-4 #bunnyCard { animation: bunnyBow 1.6s ease-in-out infinite; }
+.act-4 .hearts-burst { opacity: 1; }
+@keyframes bunnyBow {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  40% { transform: translateY(14px) rotate(3deg); }
+}
+
+/* Mood Animations */
+#stage.mood-happy #bunnyCard { animation: bunnyHappy 0.45s ease-in-out 3; }
+#stage.mood-happy .hearts-burst { opacity: 1; }
+@keyframes bunnyHappy {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.06); }
+}
+
+#stage.mood-laugh #bunnyCard { animation: bunnyLaugh 0.22s ease-in-out 7; }
+#stage.mood-laugh .hearts-burst { opacity: 1; }
+@keyframes bunnyLaugh {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(5deg) translateY(-4px); }
+}
+
+#stage.mood-surprise #bunnyCard { animation: bunnySurprise 0.35s ease-out 2; }
+@keyframes bunnySurprise {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.09) translateY(-10px); }
+}
+
+#stage.mood-sleepy #bunnyCard { animation: bunnySleep 2.4s ease-in-out 2; }
+@keyframes bunnySleep {
+  0%, 100% { transform: rotate(0); filter: brightness(1); }
+  50% { transform: rotate(5deg) translateY(6px); filter: brightness(0.94); }
+}
+
+#stage.mood-dance #bunnyCard { animation: bunnyDance 0.38s ease-in-out 7; }
+@keyframes bunnyDance {
+  0%, 100% { transform: translateX(-10px) rotate(-5deg); }
+  50% { transform: translateX(10px) rotate(5deg); }
+}
+
+#stage.mood-eating #bunnyCard { animation: bunnyMunch 0.24s ease-in-out infinite; }
+@keyframes bunnyMunch {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05, 0.95) translateY(4px); }
+}
+
+/* Speech Bubble under character */
+.bubble-box {
+  width: min(100%, 340px);
+  position: relative;
+  margin-top: 6px;
+}
+
+.bubble {
+  min-height: 50px;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 8px 42px 8px 14px;
+  font-size: clamp(14px, 1.8vw, 17px);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(255, 126, 182, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  line-height: 1.35;
+}
+
+.bubble-replay {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ffecf5;
+  border: 0;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #ff65a5;
+}
+
+/* --- RIGHT PANEL: INTERACTIVE ACTIVITIES --- */
+.control-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px 12px;
+  overflow: hidden;
+  justify-content: space-between;
+}
+
+/* Tabs */
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tab-btn {
+  padding: 8px 4px;
+  border-radius: 16px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink-light);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.15s ease;
+}
+.tab-btn span { font-size: 20px; }
+
+.tab-btn.active {
+  background: #ffffff;
+  color: #ff4785;
+  box-shadow: 0 5px 14px rgba(255, 101, 165, 0.35);
+  transform: translateY(-2px);
+  border: 2px solid #ff7eb6;
+}
+
+/* Tab Content area */
+.tab-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.tab-panel {
+  display: none;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-around;
+  animation: fadeIn 0.2s ease-out;
+}
+.tab-panel.active { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Products Grid (Shop Mode) - 2 rows x 4 cols */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+  flex: 1;
+  margin-bottom: 8px;
+}
+
+.prod-card {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 6px 4px;
+  border: 2px solid #ffdeec;
+  box-shadow: 0 4px 10px rgba(255, 126, 182, 0.12);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, border-color 0.15s;
+  touch-action: manipulation;
+}
+.prod-card:active {
+  transform: scale(0.92);
+  border-color: #ff65a5;
+}
+.prod-emoji {
+  font-size: clamp(28px, 3.8vw, 38px);
+  line-height: 1;
+}
+.prod-name {
+  font-size: clamp(11px, 1.4vw, 13px);
+  font-weight: 700;
+  margin-top: 3px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 95%;
+}
+.prod-price {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ff65a5;
+  background: #fff0f6;
+  border-radius: 10px;
+  padding: 1px 6px;
+  margin-top: 2px;
+}
+
+/* Cart Checkout Bar */
+.cart-bar {
+  height: 58px;
+  min-height: 58px;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 6px 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  border: 2px dashed #ff9ec4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cart-info {
+  display: flex;
+  flex-direction: column;
+}
+.cart-count {
+  font-size: 12px;
+  color: var(--ink-light);
+  font-weight: 700;
+}
+.cart-total {
+  font-size: clamp(16px, 2.2vw, 21px);
+  font-weight: 800;
+  color: #d94a6e;
+  line-height: 1.1;
+}
+
+.cart-actions {
+  display: flex;
+  gap: 6px;
+}
+.btn-pay {
+  background: linear-gradient(135deg, #3ec992, #2bb37c);
+  color: #fff;
+  border: 0;
+  border-radius: 16px;
+  padding: 8px 16px;
+  font-size: clamp(14px, 1.8vw, 17px);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(62, 201, 146, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: transform 0.1s;
+}
+.btn-pay:active { transform: scale(0.94); }
+
+.btn-clear {
+  background: #fff0f3;
+  color: #ff65a5;
+  border: 0;
+  border-radius: 14px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-clear:active { transform: scale(0.92); }
+
+/* Feeding Shelf (2 rows x 3 cols) */
+.feed-shelf {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+}
+.feed-item {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 8px 4px;
+  border: 2.5px solid #ffe2ed;
+  box-shadow: 0 4px 12px rgba(255, 126, 182, 0.15);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+.feed-item:active { transform: scale(0.92); }
+.feed-item .prod-emoji { font-size: clamp(34px, 4.5vw, 48px); }
+.feed-item span:last-child {
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 4px;
+  color: var(--ink);
+}
+
+/* Roleplay Buttons (2x2 grid) */
+.btns-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+}
+.big-btn {
+  font: inherit;
+  font-weight: 800;
+  color: #fff;
+  border: 0;
+  border-radius: 20px;
+  padding: 10px;
+  font-size: clamp(15px, 2vw, 19px);
+  cursor: pointer;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.12);
+  transition: transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.big-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.12);
+}
+.big-btn b {
+  display: inline-block;
+  background: rgba(255,255,255,0.9);
+  color: var(--ink);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  margin-right: 6px;
+  font-size: 15px;
+}
+.b1 { background: var(--b1); }
+.b2 { background: var(--b2); }
+.b3 { background: var(--b3); }
+.b4 { background: var(--b4); }
+
+/* Moods Grid (2 rows x 3 cols) */
+.moods-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+}
+.mood-card {
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid #ffdeec;
+  border-radius: 18px;
+  padding: 8px 4px;
+  box-shadow: 0 4px 0 rgba(90,45,90,0.1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  transition: transform 0.1s;
+}
+.mood-card:active { transform: translateY(2px); }
+.mood-card span { font-size: 28px; margin-bottom: 2px; }
+
+/* Confetti Canvas */
+#confettiCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Flying animation item */
+.flying-particle {
+  position: fixed;
+  font-size: 34px;
+  pointer-events: none;
+  z-index: 9998;
+  transition: all 0.55s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* ============================================================
+   RESPONSIVE LAYOUT FOR MOBILE PORTRAIT
+   ============================================================ */
+@media (max-width: 767px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .char-panel {
+    flex: 0 0 38%;
+    padding: 4px 10px;
+  }
+
+  .stage {
+    width: min(85vw, 185px);
+    max-height: calc(100% - 48px);
+  }
+
+  .bunny-card {
+    border-radius: 22px;
+  }
+
+  .bubble-box {
+    margin-top: 2px;
+  }
+
+  .bubble {
+    min-height: 42px;
+    font-size: 14px;
+    padding: 6px 36px 6px 10px;
+    border-radius: 14px;
+  }
+
+  .bubble-replay {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    right: 5px;
+  }
+
+  .control-panel {
+    flex: 1;
+    padding: 6px 10px 10px;
+  }
+
+  .tabs {
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .tab-btn {
+    padding: 5px 2px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+  .tab-btn span { font-size: 16px; }
+
+  .products-grid {
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .prod-card {
+    border-radius: 14px;
+    padding: 4px 2px;
+  }
+  .prod-emoji { font-size: 26px; }
+  .prod-name { font-size: 11px; }
+  .prod-price { font-size: 11px; padding: 1px 4px; }
+
+  .cart-bar {
+    height: 48px;
+    min-height: 48px;
+    padding: 4px 10px;
+    border-radius: 14px;
+  }
+  .cart-total { font-size: 16px; }
+  .btn-pay { padding: 6px 12px; font-size: 14px; border-radius: 12px; }
+  .btn-clear { padding: 6px 8px; font-size: 12px; border-radius: 12px; }
+
+  .feed-shelf { gap: 6px; }
+  .feed-item { border-radius: 14px; padding: 6px 2px; }
+  .feed-item .prod-emoji { font-size: 28px; }
+  .feed-item span:last-child { font-size: 12px; margin-top: 2px; }
+
+  .big-btn { border-radius: 16px; font-size: 15px; }
+  .moods-grid { gap: 6px; }
+  .mood-card { border-radius: 14px; padding: 4px 2px; font-size: 12px; }
+  .mood-card span { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="confettiCanvas"></canvas>
+
+<!-- Top Compact Header -->
+<header>
+  <h1><span>🥕</span> ร้านน้องนิดา <span>💖</span></h1>
+  <div class="top-actions">
+    <button type="button" class="pill-btn" id="soundToggle" aria-label="สลับเสียงเอฟเฟกต์">🔊 เสียงเปิด</button>
+    <button type="button" class="pill-btn" id="offlinePill">🟢 ออฟไลน์</button>
+  </div>
+</header>
+
+<!-- PWA Install Prompt Banner -->
+<div id="installBanner">
+  <span>📲 ติดตั้งลงหน้าจอโฮมเพื่อเล่นแบบเต็มจอ</span>
+  <button type="button" id="installBtn">ติดตั้ง</button>
+</div>
+
+<!-- Main Split App Container -->
+<div class="app-container">
+
+  <!-- LEFT: 3D Cute Bunny Character (rabbit.jpg / rabbit.jfif) -->
+  <div class="char-panel">
+    <div class="stage" id="stage" role="button" tabindex="0" aria-label="แตะน้องนิดาเพื่อเล่นด้วยกัน">
+      <span class="star" style="left:1%;top:4%">⭐</span>
+      <span class="star" style="right:2%;top:2%;animation-delay:.6s">✨</span>
+      <span class="star" style="left:3%;bottom:10%;animation-delay:1.2s">💖</span>
+      <span class="star" style="right:3%;bottom:12%;animation-delay:1.8s">🌈</span>
+
+      <!-- 3D Fluffy Rabbit Card -->
+      <div class="bunny-card" id="bunnyCard">
+        <picture>
+          <source srcset="rabbit.jpg" type="image/jpeg">
+          <img src="rabbit.jfif" id="rabbitImg" alt="น้องนิดา กระต่ายพนักงานขาย" onerror="this.src='rabbit.jfif'">
+        </picture>
+        <div id="bunnyTummy" title="จั๊กจี้พุงน้องนิดา"></div>
+        <div id="mouthTarget"></div>
+      </div>
+
+      <!-- Floating Price Tag -->
+      <div class="price-tag-badge" id="tag">
+        <span>🏷️</span>
+        <span id="tagText">0฿</span>
+      </div>
+
+      <!-- Floating Hearts Burst -->
+      <div class="hearts-burst" id="hearts">
+        <span>💖</span><span>💕</span><span>✨</span>
+      </div>
+    </div>
+
+    <!-- Speech Bubble (Right under bunny) -->
+    <div class="bubble-box">
+      <div class="bubble" id="bubble" role="status" aria-live="polite">ยินดีต้อนรับสู่ร้านน้องนิดาค่ะ 💕</div>
+      <button type="button" class="bubble-replay" id="replayBubble" aria-label="ฟังเสียงอีกครั้ง">🔁</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: CONTROLS & SHELVES (NO SCROLLING NEEDED) -->
+  <div class="control-panel">
+    <!-- Activity Tabs -->
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="shop">
+        <span>🛒</span> ซื้อของ
+      </button>
+      <button type="button" class="tab-btn" data-tab="feed">
+        <span>🥕</span> ป้อนขนม
+      </button>
+      <button type="button" class="tab-btn" data-tab="roleplay">
+        <span>💬</span> ชวนคุย
+      </button>
+      <button type="button" class="tab-btn" data-tab="moods">
+        <span>🥰</span> อารมณ์
+      </button>
+    </div>
+
+    <!-- Active Panels -->
+    <div class="tab-content-area">
+      <!-- 1. SHOP PANEL -->
+      <div class="tab-panel active" id="panel-shop">
+        <div class="products-grid" id="productShelf"></div>
+        <div class="cart-bar">
+          <div class="cart-info">
+            <div class="cart-count" id="cartCount">ตะกร้า: 0 ชิ้น</div>
+            <div class="cart-total" id="cartTotal">รวม: 0 บาท</div>
+          </div>
+          <div class="cart-actions">
+            <button type="button" class="btn-clear" id="clearCartBtn" title="เริ่มใหม่">🧺 ล้าง</button>
+            <button type="button" class="btn-pay" id="checkoutBtn">🪙 คิดเงิน</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. FEED PANEL -->
+      <div class="tab-panel" id="panel-feed">
+        <div class="feed-shelf" id="feedShelf"></div>
+      </div>
+
+      <!-- 3. ROLEPLAY PANEL (1-4) -->
+      <div class="tab-panel" id="panel-roleplay">
+        <div class="btns-grid">
+          <button type="button" class="big-btn b1" data-k="1"><b>1</b> ต้อนรับ 👋</button>
+          <button type="button" class="big-btn b2" data-k="2"><b>2</b> รับอะไรดี 💬</button>
+          <button type="button" class="big-btn b3" data-k="3"><b>3</b> บอกราคา 🏷️</button>
+          <button type="button" class="big-btn b4" data-k="4"><b>4</b> ขอบคุณ 💖</button>
+        </div>
+      </div>
+
+      <!-- 4. MOODS PANEL -->
+      <div class="tab-panel" id="panel-moods">
+        <div class="moods-grid">
+          <button type="button" class="mood-card" data-mood="happy"><span>🥰</span>ดีใจ</button>
+          <button type="button" class="mood-card" data-mood="laugh"><span>😂</span>หัวเราะ</button>
+          <button type="button" class="mood-card" data-mood="surprise"><span>😮</span>ตกใจ</button>
+          <button type="button" class="mood-card" data-mood="sleepy"><span>😴</span>ง่วงนอน</button>
+          <button type="button" class="mood-card" data-mood="dance"><span>💃</span>เต้นระบำ</button>
+          <button type="button" class="mood-card" data-mood="praise"><span>🌟</span>ชมคนเก่ง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   1. WEB AUDIO SYNTHESIZER (100% Offline Sound Effects)
+   ============================================================ */
+let audioCtx = null;
+let soundEnabled = true;
+
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+const SoundFX = {
+  // Barcode scanner "beep"
+  beep() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1760, ctx.currentTime);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.12);
+  },
+
+  // Cash Register bell "ding-ding" & coin
+  cashRegister() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    [2093, 2637].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.08);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.08 + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.08);
+      osc.stop(ctx.currentTime + i * 0.08 + 0.6);
+    });
+  },
+
+  // Chewing sound
+  munch() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    [0, 0.11, 0.22].forEach(t => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, ctx.currentTime + t);
+      osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + t + 0.08);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + t + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.09);
+    });
+  },
+
+  // Boing spring sound
+  boing() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(220, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.22);
+    gain.gain.setValueAtTime(0.28, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  },
+
+  // Giggle melody
+  giggle() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const notes = [659, 784, 880, 1046];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.06);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.06 + 0.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + idx * 0.06);
+      osc.stop(ctx.currentTime + idx * 0.06 + 0.11);
+    });
+  },
+
+  // Celebration fanfare
+  fanfare() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const chord = [523.25, 659.25, 783.99, 1046.5];
+    chord.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.09);
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + idx * 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.09 + 0.7);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + idx * 0.09);
+      osc.stop(ctx.currentTime + idx * 0.09 + 0.7);
+    });
+  }
+};
+
+/* ============================================================
+   2. CONFETTI & VISUAL PARTICLES
+   ============================================================ */
+const canvas = document.getElementById('confettiCanvas');
+const cCtx = canvas.getContext('2d');
+let confettiPieces = [];
+let animFrame = null;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function launchConfetti(count = 45) {
+  const colors = ['#ff65a5', '#ffbe3b', '#48dbfb', '#1dd1a1', '#ff9ff3', '#feca57'];
+  for (let i = 0; i < count; i++) {
+    confettiPieces.push({
+      x: canvas.width / 2 + (Math.random() - 0.5) * 160,
+      y: canvas.height * 0.35 + (Math.random() - 0.5) * 80,
+      vx: (Math.random() - 0.5) * 16,
+      vy: -Math.random() * 12 - 4,
+      size: Math.random() * 10 + 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      vRot: (Math.random() - 0.5) * 12,
+      shape: Math.random() > 0.4 ? 'circle' : 'rect'
+    });
+  }
+  if (!animFrame) updateConfetti();
+}
+
+function updateConfetti() {
+  cCtx.clearRect(0, 0, canvas.width, canvas.height);
+  confettiPieces.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.35;
+    p.rotation += p.vRot;
+
+    cCtx.save();
+    cCtx.translate(p.x, p.y);
+    cCtx.rotate((p.rotation * Math.PI) / 180);
+    cCtx.fillStyle = p.color;
+
+    if (p.shape === 'circle') {
+      cCtx.beginPath();
+      cCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+      cCtx.fill();
+    } else {
+      cCtx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+    }
+    cCtx.restore();
+  });
+
+  confettiPieces = confettiPieces.filter(p => p.y < canvas.height + 40);
+  if (confettiPieces.length > 0) {
+    animFrame = requestAnimationFrame(updateConfetti);
+  } else {
+    animFrame = null;
+    cCtx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+function createFlyingEmoji(emoji, startX, startY, endX, endY, onComplete) {
+  const el = document.createElement('div');
+  el.className = 'flying-particle';
+  el.textContent = emoji;
+  el.style.left = startX + 'px';
+  el.style.top = startY + 'px';
+  document.body.appendChild(el);
+
+  requestAnimationFrame(() => {
+    el.style.left = endX + 'px';
+    el.style.top = endY + 'px';
+    el.style.transform = 'scale(1.4) rotate(20deg)';
+    el.style.opacity = '0.9';
+  });
+
+  setTimeout(() => {
+    el.remove();
+    if (onComplete) onComplete();
+  }, 550);
+}
+
+/* ============================================================
+   3. SPEECH SYNTHESIS & CHARACTER CONTROLLER
+   ============================================================ */
+const $ = id => document.getElementById(id);
+let voices = [];
+let currentAction = 1;
+let currentText = "ยินดีต้อนรับสู่ร้านน้องนิดาค่ะ 💕";
+let actionTimer = null;
+const voiceAvailable = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+
+function loadVoices() {
+  if (!voiceAvailable) return;
+  voices = speechSynthesis.getVoices();
+}
+if (voiceAvailable) {
+  loadVoices();
+  speechSynthesis.addEventListener('voiceschanged', loadVoices);
+}
+
+function startSpeakingState() {
+  $('stage').classList.add('speaking');
+}
+
+function stopSpeakingState() {
+  $('stage').classList.remove('speaking');
+}
+
+function stopAll() {
+  clearTimeout(actionTimer);
+  stopSpeakingState();
+  $('stage').className = 'stage';
+}
+
+function speakText(text, pitch = 1.45, rate = 0.88, onDone = null) {
+  currentText = text;
+  $('bubble').textContent = text;
+  clearTimeout(actionTimer);
+  if (voiceAvailable) speechSynthesis.cancel();
+
+  let ended = false;
+  const finish = () => {
+    if (ended) return;
+    ended = true;
+    stopAll();
+    if (onDone) onDone();
+  };
+
+  if (!voiceAvailable) {
+    startSpeakingState();
+    actionTimer = setTimeout(finish, Math.max(2000, text.length * 105));
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'th-TH';
+  const thaiVoice = voices.find(v => /^th(-|_|$)/i.test(v.lang));
+  if (thaiVoice) utterance.voice = thaiVoice;
+  utterance.pitch = pitch;
+  utterance.rate = rate;
+  utterance.volume = 1;
+
+  utterance.onstart = () => {
+    startSpeakingState();
+    clearTimeout(actionTimer);
+  };
+  utterance.onend = finish;
+  utterance.onerror = () => {
+    startSpeakingState();
+    actionTimer = setTimeout(finish, Math.max(2000, text.length * 105));
+  };
+
+  speechSynthesis.speak(utterance);
+  actionTimer = setTimeout(() => {
+    if (!ended) {
+      startSpeakingState();
+      actionTimer = setTimeout(finish, Math.max(2000, text.length * 105));
+    }
+  }, 1600);
+}
+
+/* ============================================================
+   4. SHOPPING & PRODUCTS
+   ============================================================ */
+const PRODUCTS = [
+  { id: 'berry', name: 'สตรอว์เบอร์รี', emoji: '🍓', price: 5, talk: 'สตรอว์เบอร์รี หวานฉ่ำ อร่อยมากค่ะ!' },
+  { id: 'carrot', name: 'แครอทสด', emoji: '🥕', price: 2, talk: 'แครอทกรุบกรอบ ของโปรดกระต่ายเลย!' },
+  { id: 'icecream', name: 'ไอศกรีม', emoji: '🍦', price: 10, talk: 'ไอศกรีมหวานเย็น ชื่นใจที่สุดค่ะ!' },
+  { id: 'milk', name: 'นมสดกล่อง', emoji: '🥛', price: 10, talk: 'นมสดดื่มแล้วแข็งแรง ตัวโตไว ๆ นะคะ!' },
+  { id: 'cake', name: 'เค้กช็อกโกแลต', emoji: '🍰', price: 20, talk: 'เค้กชิ้นโต น่ากินมากเลยค่ะ!' },
+  { id: 'bear', name: 'ตุ๊กตาหมี', emoji: '🧸', price: 25, talk: 'น้องหมีนุ่มนิ่ม น่ารักจังเลย!' },
+  { id: 'apple', name: 'แอปเปิ้ล', emoji: '🍎', price: 5, talk: 'แอปเปิ้ลสีแดง สดใหม่จากสวนค่ะ!' },
+  { id: 'candy', name: 'อมยิ้ม', emoji: '🍭', price: 5, talk: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!' }
+];
+
+let cart = [];
+
+function renderProducts() {
+  const shelf = $('productShelf');
+  shelf.innerHTML = '';
+  PRODUCTS.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'prod-card';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.innerHTML = `
+      <div class="prod-emoji">${p.emoji}</div>
+      <div class="prod-name">${p.name}</div>
+      <div class="prod-price">${p.price}฿</div>
+    `;
+    card.addEventListener('click', (e) => addToCart(p, e));
+    shelf.appendChild(card);
+  });
+}
+
+function addToCart(product, event) {
+  getAudioContext();
+  SoundFX.beep();
+  cart.push(product);
+  updateCartDisplay();
+
+  // Flying emoji towards bunny
+  const rect = event.currentTarget.getBoundingClientRect();
+  const targetRect = $('bunnyCard').getBoundingClientRect();
+  createFlyingEmoji(product.emoji, rect.left + rect.width / 2, rect.top, targetRect.left + targetRect.width / 2, targetRect.top + targetRect.height * 0.6);
+
+  // Character reaction
+  $('stage').className = 'stage act-2';
+  speakText(product.talk);
+}
+
+function updateCartDisplay() {
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  $('cartCount').textContent = `ตะกร้า: ${cart.length} ชิ้น`;
+  $('cartTotal').textContent = `รวม: ${total} บาท`;
+  $('tagText').textContent = `${total}฿`;
+  if (total > 0) {
+    $('tag').classList.add('show');
+  } else {
+    $('tag').classList.remove('show');
+  }
+}
+
+function checkout() {
+  if (cart.length === 0) {
+    SoundFX.boing();
+    speakText("ยังไม่มีของในตะกร้าเลยค่ะ ลองแตะเลือกของก่อนนะคะหนู");
+    return;
+  }
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  getAudioContext();
+  SoundFX.cashRegister();
+  setTimeout(SoundFX.fanfare, 280);
+  launchConfetti(55);
+
+  $('stage').className = 'stage act-3';
+  $('tag').classList.add('show');
+
+  const praises = [
+    `คิดเงินเรียบร้อย รวม ${total} บาทค่ะ ขอบคุณลูกค้าน่ารักนะคะ!`,
+    `ทั้งหมด ${total} บาทค่ะ ได้รับเงินแล้ว ขอให้ทานให้อร่อยนะคะ`,
+    `เย้ ซื้อของครบแล้ว ทั้งหมด ${total} บาท ขอบคุณน้องนิดามากค่ะ!`
+  ];
+  const msg = praises[Math.floor(Math.random() * praises.length)];
+  speakText(msg, 1.4, 0.86, () => {
+    cart = [];
+    updateCartDisplay();
+  });
+}
+
+function clearCart() {
+  if (cart.length === 0) return;
+  SoundFX.boing();
+  cart = [];
+  updateCartDisplay();
+  speakText("เริ่มเลือกรอบใหม่กันเลยค่ะ");
+}
+
+/* ============================================================
+   5. FEEDING THE BUNNY
+   ============================================================ */
+const TREATS = [
+  { name: 'แครอท', emoji: '🥕', talk: 'ง่ำ ๆๆๆ แครอทกรุบกรอบ อร่อยชื่นใจที่สุดเลย!' },
+  { name: 'สตรอว์เบอร์รี', emoji: '🍓', talk: 'ง่ำ ๆ หวานฉ่ำ สดชื่นมาก ขอบคุณนะคะหนู!' },
+  { name: 'เค้กหวาน', emoji: '🍰', talk: 'ว้าว เค้กนุ่มละมุนลิ้น ฟินที่สุดเลยค่ะ!' },
+  { name: 'ไอศกรีม', emoji: '🍦', talk: 'เย็นเจี๊ยบ หวานหอม อร่อยชื่นใจจัง!' },
+  { name: 'แอปเปิ้ล', emoji: '🍎', talk: 'กรุบกรอบ วิตามินซีเต็มเปี่ยมเลยค่ะ!' },
+  { name: 'คุกกี้', emoji: '🍪', talk: 'คุกกี้หอมเนยมาก ๆ ขอน้องนิดากินอีกชิ้นนะคะ!' }
+];
+
+function renderFeedShelf() {
+  const shelf = $('feedShelf');
+  shelf.innerHTML = '';
+  TREATS.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'feed-item';
+    item.innerHTML = `
+      <div class="prod-emoji">${t.emoji}</div>
+      <span>ป้อน ${t.name}</span>
+    `;
+    item.addEventListener('click', (e) => feedBunny(t, e));
+    shelf.appendChild(item);
+  });
+}
+
+function feedBunny(treat, event) {
+  getAudioContext();
+  const rect = event.currentTarget.getBoundingClientRect();
+  const mouthRect = $('mouthTarget').getBoundingClientRect();
+  const endX = mouthRect.left > 0 ? (mouthRect.left + mouthRect.width / 2) : (window.innerWidth * 0.22);
+  const endY = mouthRect.top > 0 ? (mouthRect.top + mouthRect.height / 2) : (window.innerHeight * 0.25);
+
+  createFlyingEmoji(treat.emoji, rect.left + rect.width / 2, rect.top, endX, endY, () => {
+    SoundFX.munch();
+    $('stage').className = 'stage mood-eating';
+    launchConfetti(25);
+    setTimeout(() => {
+      speakText(treat.talk, 1.48, 0.88);
+    }, 450);
+  });
+}
+
+/* ============================================================
+   6. ROLEPLAY (1-4)
+   ============================================================ */
+const T = {
+  1: [
+    "สวัสดีค่ะ ยินดีต้อนรับสู่ร้านน้องนิดานะคะ",
+    "สวัสดีจ้า เข้ามาเลือกของน่ารัก ๆ ได้เลยค่ะ",
+    "ฮัลโหล ยินดีต้อนรับนะคะ วันนี้มีของน่ารักเต็มร้านเลย"
+  ],
+  2: [
+    "รับอะไรเพิ่มอีกไหมคะ",
+    "อยากได้ขนมหรือของเล่นอีกชิ้นไหมเอ่ย",
+    "มีอะไรที่อยากเลือกเพิ่มอีกไหมคะ"
+  ],
+  3: [
+    "ชิ้นนี้ราคาเก้าสิบเก้าบาทค่ะ",
+    "ราคาเก้าสิบเก้าบาทนะคะ ขอบคุณค่ะ",
+    "ทั้งหมดเก้าสิบเก้าบาทค่ะ"
+  ],
+  4: [
+    "ขอบคุณมาก ๆ นะคะ แล้วแวะมาเล่นกันอีกนะ",
+    "ขอบคุณที่มาร้านน้องนิดาค่ะ บ๊ายบาย",
+    "เย้ ขอบคุณนะคะ ขอให้วันนี้เป็นวันที่สดใสค่ะ"
+  ]
+};
+
+function sayRoleplay(k) {
+  if (!T[k]) return;
+  currentAction = Number(k);
+  const options = T[k];
+  const text = options[Math.floor(Math.random() * options.length)];
+  $('stage').className = 'stage act-' + currentAction;
+  if (k === 1) SoundFX.boing();
+  if (k === 3) SoundFX.cashRegister();
+  if (k === 4) { SoundFX.fanfare(); launchConfetti(30); }
+  speakText(text);
+}
+
+/* ============================================================
+   7. MOODS
+   ============================================================ */
+const MOODS = {
+  happy: {
+    lines: ["เย้! ดีใจที่ได้เจอหนูค่ะ", "น้องนิดามีความสุขจังเลย!", "ว้าว วันนี้สดใสจังเลยค่ะ"],
+    sound: () => { SoundFX.giggle(); launchConfetti(25); }
+  },
+  laugh: {
+    lines: ["ฮิฮิฮิ ตลกจังเลยค่ะ", "คิกคิก น้องนิดาขำแล้ว!", "ฮ่า ฮ่า ฮ่า สนุกจังเลย"],
+    sound: () => SoundFX.giggle()
+  },
+  surprise: {
+    lines: ["โอ๊ะ! มีอะไรเอ่ย", "ว้าว! น้องนิดาตกใจเลยค่ะ", "อุ๊ย! นั่นอะไรนะคะ"],
+    sound: () => SoundFX.boing()
+  },
+  sleepy: {
+    lines: ["หาววว น้องนิดาง่วงแล้วค่ะ", "ขอพักตาสักแป๊บนะคะ", "ฝันดีนะคะ หาววว"],
+    sound: () => SoundFX.boing()
+  },
+  dance: {
+    lines: ["ดุ๊กดิ๊ก ดุ๊กดิ๊ก เต้นระบำกันเถอะ!", "ลั้ลลา มาขยับตัวด้วยกันนะคะ", "โยกซ้าย โยกขวา สนุกจังเลย!"],
+    sound: () => { SoundFX.fanfare(); launchConfetti(35); }
+  },
+  praise: {
+    lines: ["หนูนิดาเก่งที่สุดในโลกเลยค่ะ!", "คนเก่งของพ่อกับแม่ ยอดเยี่ยมมาก!", "ปรบมือให้คนเก่งเลยค่ะ แปะ แปะ แปะ!"],
+    sound: () => { SoundFX.fanfare(); launchConfetti(45); }
+  }
+};
+
+function reactMood(moodKey) {
+  const m = MOODS[moodKey];
+  if (!m) return;
+  $('stage').className = 'stage mood-' + moodKey;
+  if (m.sound) m.sound();
+  const text = m.lines[Math.floor(Math.random() * m.lines.length)];
+  const pitch = moodKey === 'sleepy' ? 1.05 : 1.48;
+  const rate = moodKey === 'sleepy' ? 0.72 : 0.9;
+  speakText(text, pitch, rate);
+}
+
+/* ============================================================
+   8. LISTENERS
+   ============================================================ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    SoundFX.boing();
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = $('panel-' + btn.dataset.tab);
+    if (panel) panel.classList.add('active');
+  });
+});
+
+$('bunnyTummy').addEventListener('click', (e) => {
+  e.stopPropagation();
+  getAudioContext();
+  SoundFX.giggle();
+  $('stage').className = 'stage mood-laugh';
+  speakText("คิกคิก อย่าจั๊กจี้พุงนิดาสิคะหนู!", 1.55);
+});
+
+$('stage').addEventListener('click', () => {
+  getAudioContext();
+  SoundFX.boing();
+  launchConfetti(20);
+  const hellos = [
+    "สวัสดีค่ะ ดีใจที่หนูมาเล่นกับน้องนิดานะคะ 💕",
+    "เย้ กอดกอดกันค่ะ วันนี้เล่นอะไรกันดีเอ่ย",
+    "รักหนูจังเลย มาเล่นขายของด้วยกันต่อนะคะ"
+  ];
+  speakText(hellos[Math.floor(Math.random() * hellos.length)]);
+});
+
+$('soundToggle').addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  $('soundToggle').textContent = soundEnabled ? '🔊 เสียงเปิด' : '🔇 ปิดเสียง';
+});
+
+$('replayBubble').addEventListener('click', (e) => {
+  e.stopPropagation();
+  speakText(currentText);
+});
+$('bubble').addEventListener('click', () => speakText(currentText));
+
+$('checkoutBtn').addEventListener('click', checkout);
+$('clearCartBtn').addEventListener('click', clearCart);
+
+document.querySelectorAll('.btns-grid button').forEach(b => {
+  b.addEventListener('click', () => sayRoleplay(b.dataset.k));
+});
+
+document.querySelectorAll('.moods-grid button').forEach(b => {
+  b.addEventListener('click', () => reactMood(b.dataset.mood));
+});
+
+window.addEventListener('keydown', e => {
+  if (e.repeat || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (['1', '2', '3', '4'].includes(e.key)) {
+    sayRoleplay(e.key);
+  } else if (e.key === 'Escape') {
+    if (voiceAvailable) speechSynthesis.cancel();
+    stopAll();
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (voiceAvailable) speechSynthesis.cancel();
+    stopAll();
+  }
+});
+
+/* ============================================================
+   9. PWA & SERVICE WORKER
+   ============================================================ */
+let deferredPrompt = null;
+const installBanner = $('installBanner');
+const installBtn = $('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBanner.style.display = 'flex';
+});
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const choice = await deferredPrompt.userChoice;
+  if (choice.outcome === 'accepted') {
+    installBanner.style.display = 'none';
+  }
+  deferredPrompt = null;
+});
+
+function updateOnlineStatus() {
+  const pill = $('offlinePill');
+  if (navigator.onLine) {
+    pill.textContent = '🟢 ออนไลน์';
+    pill.style.borderColor = 'rgba(62, 201, 146, 0.4)';
+  } else {
+    pill.textContent = '🟡 ออฟไลน์';
+    pill.style.borderColor = 'rgba(255, 158, 44, 0.4)';
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
+  });
+}
+
+renderProducts();
+renderFeedShelf();
+</script>
+</body>
+</html>
