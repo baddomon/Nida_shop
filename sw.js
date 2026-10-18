@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nida-shop-v2.9';
+const CACHE_NAME = 'nida-shop-v2.9.1';
 const ASSETS_TO_CACHE = [
   './', './index.html', './style.css', './app.js',
   './manifest.json', './icon-192.png', './icon-512.png', './rabbit.jpg'

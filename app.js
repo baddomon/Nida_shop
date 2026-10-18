@@ -473,7 +473,18 @@ const ICONS = {
   carrot: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg>`,
   cart: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M6 6 L10 6 L14 23 L28 23 L31 11 L12 11" fill="none" stroke="#ff65a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="28" r="3" fill="#ff65a5"/><circle cx="26" cy="28" r="3" fill="#ff65a5"/></svg>`,
   milk: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M13 13 L23 13 L21 4 L15 4 Z" fill="#90caf9"/><path d="M10 13 L26 13 L25 33 L11 33 Z" fill="#e3f2fd" stroke="#64b5f6" stroke-width="2"/><rect x="13" y="17" width="10" height="9" rx="2" fill="#bbdefb"/><text x="18" y="24" font-size="7" font-weight="900" text-anchor="middle" fill="#1976d2">MILK</text></svg>`,
-  bear: `<svg viewBox="0 0 36 36" class="ui-svg"><circle cx="10" cy="11" r="6" fill="#c68a4c"/><circle cx="10" cy="11" r="3" fill="#ffb8d2"/><circle cx="26" cy="11" r="6" fill="#c68a4c"/><circle cx="26" cy="11" r="3" fill="#ffb8d2"/><circle cx="18" cy="20" r="13" fill="#d49b5c"/><ellipse cx="18" cy="24" rx="6" ry="4.5" fill="#fff1d0"/><circle cx="18" cy="22" r="2" fill="#3e2723"/><circle cx="14" cy="18" r="2.2" fill="#3e2723"/><circle cx="22" cy="18" r="2.2" fill="#3e2723"/></svg>`
+  bear: `<svg viewBox="0 0 36 36" class="ui-svg"><circle cx="10" cy="11" r="6" fill="#c68a4c"/><circle cx="10" cy="11" r="3" fill="#ffb8d2"/><circle cx="26" cy="11" r="6" fill="#c68a4c"/><circle cx="26" cy="11" r="3" fill="#ffb8d2"/><circle cx="18" cy="20" r="13" fill="#d49b5c"/><ellipse cx="18" cy="24" rx="6" ry="4.5" fill="#fff1d0"/><circle cx="18" cy="22" r="2" fill="#3e2723"/><circle cx="14" cy="18" r="2.2" fill="#3e2723"/><circle cx="22" cy="18" r="2.2" fill="#3e2723"/></svg>`,
+  cupcake: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M10 20 L12 32 C12 33 13 33.5 14 33.5 L22 33.5 C23 33.5 24 33 24 32 L26 20 Z" fill="#f8bbd0" stroke="#f48fb1" stroke-width="1.5"/><path d="M9 20 C7 16 11 13 14 15 C16 12 20 12 22 15 C25 13 29 16 27 20 Z" fill="#ff80ab"/><circle cx="18" cy="10" r="3.5" fill="#e91e63"/><path d="M19 7 C21 4 23 4 25 5" fill="none" stroke="#880e4f" stroke-width="1.5" stroke-linecap="round"/><circle cx="13" cy="17" r="1.2" fill="#fff"/><circle cx="18" cy="16" r="1.2" fill="#ffd54f"/><circle cx="23" cy="18" r="1.2" fill="#80d8ff"/></svg>`,
+  tag: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M14 6 L28 20 C29 21 29 23 28 24 L24 28 C23 29 21 29 20 28 L6 14 L6 6 Z" fill="#ff70a6"/><circle cx="11" cy="11" r="2.5" fill="#fff"/></svg>`,
+  chef: `<svg viewBox="0 0 36 36" class="ui-svg"><rect x="11" y="26" width="14" height="6" rx="2" fill="#eceff1" stroke="#b0bec5" stroke-width="1.2"/><path d="M11 26 C7 23 8 15 13 15 C14 9 22 9 23 15 C28 15 29 23 25 26 Z" fill="#ffffff" stroke="#b0bec5" stroke-width="1.5"/></svg>`,
+  cap: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M8 22 C8 13 17 11 25 14 C28 15 31 18 31 22 Z" fill="#42a5f5"/><ellipse cx="14" cy="23" rx="10" ry="3.5" fill="#1e88e5"/><circle cx="19" cy="12" r="2" fill="#ffd54f"/></svg>`,
+  wizard: `<svg viewBox="0 0 36 36" class="ui-svg"><ellipse cx="18" cy="28" rx="14" ry="4" fill="#7e57c2"/><path d="M11 27 L18 6 L25 27 Z" fill="#5e35b1"/><polygon points="18,12 19.5,15 23,15 20,17.5 21.5,21 18,18.5 14.5,21 16,17.5 13,15 16.5,15" fill="#ffd54f"/></svg>`,
+  mustache: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M18 20 C16 15 9 15 6 21 C10 24 15 23 18 21 C21 23 26 24 30 21 C27 15 20 15 18 20 Z" fill="#5d4037"/></svg>`,
+  scarf: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M8 17 C8 12 28 12 28 17 C28 22 8 22 8 17 Z" fill="#ff7043"/><path d="M21 17 L23 31 L17 31 L18 17 Z" fill="#e64a19"/><line x1="17" y1="31" x2="23" y2="31" stroke="#ffd54f" stroke-width="2" stroke-dasharray="1.5,1.5"/></svg>`,
+  necklace: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M9 13 Q18 28 27 13" fill="none" stroke="#cfd8dc" stroke-width="2" stroke-dasharray="2.5,2.5"/><circle cx="18" cy="21.5" r="3.5" fill="#ff4081"/><circle cx="13" cy="18" r="2.2" fill="#fff"/><circle cx="23" cy="18" r="2.2" fill="#fff"/></svg>`,
+  apron: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M14 9 L22 9 L22 14 L27 18 L25 31 L11 31 L9 18 L14 14 Z" fill="#80cbc4" stroke="#00897b" stroke-width="1.5"/><rect x="14.5" y="21" width="7" height="6" rx="1.5" fill="#4db6ac"/></svg>`,
+  cape: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M13 10 L23 10 L30 30 L6 30 Z" fill="#e53935"/><path d="M18 10 L20 30 L16 30 Z" fill="#c62828"/><circle cx="18" cy="9.5" r="2.5" fill="#ffd54f"/></svg>`,
+  wings: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M18 18 C13 7 3 9 5 18 C7 25 15 21 18 18 Z" fill="#b388ff" opacity="0.88"/><path d="M18 18 C23 7 33 9 31 18 C29 25 21 21 18 18 Z" fill="#b388ff" opacity="0.88"/><circle cx="18" cy="18" r="2.5" fill="#ff80ab"/></svg>`
 };
 
 /* ============================================================
@@ -490,7 +501,7 @@ const PRODUCTS = [
   { id: 'candy', name: 'อมยิ้ม', icon: '🍭', price: 5, talk: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!' },
   { id: 'banana', name: 'กล้วยหอม', icon: '🍌', price: 3, talk: 'กล้วยหอมหวาน ให้พลังงานเยอะเลยค่ะ!' },
   { id: 'cookie', name: 'คุกกี้', icon: '🍪', price: 8, talk: 'คุกกี้กรอบ ๆ หอมเนยเลยค่ะ!' },
-  { id: 'cupcake', name: 'คัพเค้ก', icon: '🧁', price: 12, talk: 'คัพเค้กหน้าสวย หวานอร่อยค่ะ!' },
+  { id: 'cupcake', name: 'คัพเค้ก', icon: ICONS.cupcake, price: 12, talk: 'คัพเค้กหน้าสวย หวานอร่อยค่ะ!' },
   { id: 'donut', name: 'โดนัท', icon: '🍩', price: 15, talk: 'โดนัทหน้าช็อกโกแลต นุ่มฟูเลยค่ะ!' }
 ];
 
@@ -600,33 +611,33 @@ function finishCheckout(total, change) {
 const DRESS_CATS = [
   { k: 'hat',   icon: '🎩', name: 'หมวก' },
   { k: 'face',  icon: '👓', name: 'หน้า' },
-  { k: 'body',  icon: '🧣', name: 'ตัว' },
+  { k: 'body',  icon: '👗', name: 'ตัว' },
   { k: 'hold',  icon: '🎈', name: 'ถือ' },
   { k: 'color', icon: '🎨', name: 'สีชุด' }
 ];
 const DRESS = [
-  { k: 'Crown',   cat: 'hat',  e: '👑', n: 'มงกุฎ',        say: 'มงกุฎสวยจังเลยค่ะ เหมือนเจ้าหญิงเลย' },
-  { k: 'Chef',    cat: 'hat',  e: '👨‍🍳', n: 'หมวกเชฟ',      say: 'หมวกเชฟค่ะ วันนี้ทำขนมอร่อย ๆ กันนะคะ' },
-  { k: 'Party',   cat: 'hat',  e: '🎉', n: 'หมวกปาร์ตี้',   say: 'หมวกปาร์ตี้ค่ะ ฉลองกันเลย' },
-  { k: 'Cap',     cat: 'hat',  e: '🧢', n: 'หมวกแก๊ป',      say: 'หมวกแก๊ปสีฟ้า เท่จังเลยค่ะ' },
-  { k: 'Wizard',  cat: 'hat',  e: '🧙', n: 'หมวกพ่อมด',    say: 'หมวกพ่อมดค่ะ ซิมซาลาบิม เสกขนมออกมาเลย' },
-  { k: 'Flower',  cat: 'hat',  e: '🌸', n: 'ติดดอกไม้',     say: 'ดอกไม้สวยจังเลย หอมด้วยนะคะ' },
-  { k: 'Glasses', cat: 'face', e: '👓', n: 'แว่นตา',        say: 'ใส่แว่นแล้วดูฉลาดเลยค่ะ' },
-  { k: 'Shades',  cat: 'face', e: '😎', n: 'แว่นกันแดด',    say: 'แว่นกันแดด เท่สุด ๆ ไปเลยค่ะ' },
-  { k: 'HeartGlasses', cat: 'face', e: '😍', n: 'แว่นหัวใจ', say: 'แว่นหัวใจ น่ารักที่สุดเลยค่ะ' },
-  { k: 'Mustache', cat: 'face', e: '🧔', n: 'หนวด',         say: 'ฮ่า ฮ่า หนวดเท่ ๆ เหมือนคุณลุงเลยค่ะ' },
-  { k: 'Sticker', cat: 'face', e: '⭐', n: 'สติกเกอร์แก้ม', say: 'สติกเกอร์ดาวกับหัวใจที่แก้ม น่ารักจัง' },
-  { k: 'Phones',  cat: 'face', e: '🎧', n: 'หูฟัง',         say: 'ใส่หูฟัง ฟังเพลงเพราะ ๆ กันค่ะ' },
-  { k: 'Scarf',   cat: 'body', e: '🧣', n: 'ผ้าพันคอ',      say: 'ผ้าพันคอ อุ่นสบายเลยค่ะ' },
-  { k: 'Bowtie',  cat: 'body', e: '🎀', n: 'โบว์ผูกคอ', say: 'โบว์ผูกคอสีม่วง ดูเป็นสุภาพบุรุษเลยค่ะ' },
-  { k: 'Necklace', cat: 'body', e: '📿', n: 'สร้อยไข่มุก',  say: 'สร้อยไข่มุกสวยแวววาวเลยค่ะ' },
-  { k: 'Apron',   cat: 'body', e: '🧺', n: 'ผ้ากันเปื้อน',  say: 'ผ้ากันเปื้อน พร้อมขายของแล้วค่ะ' },
-  { k: 'Cape',    cat: 'body', e: '🦸', n: 'ผ้าคลุมฮีโร่',  say: 'ผ้าคลุมซุปเปอร์ฮีโร่ บินได้เลยนะคะ ฟิ้วว' },
-  { k: 'Wings',   cat: 'body', e: '🧚', n: 'ปีกนางฟ้า',     say: 'ปีกนางฟ้า กระพือปีกได้ด้วยนะคะ' },
-  { k: 'Wand',    cat: 'hold', e: '✨', n: 'ไม้กายสิทธิ์',   say: 'ไม้กายสิทธิ์ค่ะ วิบ วิบ เสกให้เลย' },
-  { k: 'Balloon', cat: 'hold', e: '🎈', n: 'ลูกโป่ง',       say: 'ลูกโป่งสีแดง ลอยสูงเลยค่ะ' },
-  { k: 'Lollipop', cat: 'hold', e: '🍭', n: 'อมยิ้มยักษ์',  say: 'อมยิ้มใหญ่มาก หวานจัง' },
-  { k: 'Bouquet', cat: 'hold', e: '💐', n: 'ช่อดอกไม้',     say: 'ช่อดอกไม้ให้คุณแม่ค่ะ' }
+  { k: 'Crown',   cat: 'hat',  e: '👑',           n: 'มงกุฎ',        say: 'มงกุฎสวยจังเลยค่ะ เหมือนเจ้าหญิงเลย' },
+  { k: 'Chef',    cat: 'hat',  e: ICONS.chef,     n: 'หมวกเชฟ',      say: 'หมวกเชฟค่ะ วันนี้ทำขนมอร่อย ๆ กันนะคะ' },
+  { k: 'Party',   cat: 'hat',  e: '🎉',           n: 'หมวกปาร์ตี้',   say: 'หมวกปาร์ตี้ค่ะ ฉลองกันเลย' },
+  { k: 'Cap',     cat: 'hat',  e: ICONS.cap,      n: 'หมวกแก๊ป',      say: 'หมวกแก๊ปสีฟ้า เท่จังเลยค่ะ' },
+  { k: 'Wizard',  cat: 'hat',  e: ICONS.wizard,   n: 'หมวกพ่อมด',    say: 'หมวกพ่อมดค่ะ ซิมซาลาบิม เสกขนมออกมาเลย' },
+  { k: 'Flower',  cat: 'hat',  e: '🌸',           n: 'ติดดอกไม้',     say: 'ดอกไม้สวยจังเลย หอมด้วยนะคะ' },
+  { k: 'Glasses', cat: 'face', e: '👓',           n: 'แว่นตา',        say: 'ใส่แว่นแล้วดูฉลาดเลยค่ะ' },
+  { k: 'Shades',  cat: 'face', e: '😎',           n: 'แว่นกันแดด',    say: 'แว่นกันแดด เท่สุด ๆ ไปเลยค่ะ' },
+  { k: 'HeartGlasses', cat: 'face', e: '😍',      n: 'แว่นหัวใจ',     say: 'แว่นหัวใจ น่ารักที่สุดเลยค่ะ' },
+  { k: 'Mustache', cat: 'face', e: ICONS.mustache, n: 'หนวด',        say: 'ฮ่า ฮ่า หนวดเท่ ๆ เหมือนคุณลุงเลยค่ะ' },
+  { k: 'Sticker', cat: 'face', e: '⭐',           n: 'สติกเกอร์แก้ม', say: 'สติกเกอร์ดาวกับหัวใจที่แก้ม น่ารักจัง' },
+  { k: 'Phones',  cat: 'face', e: '🎧',           n: 'หูฟัง',         say: 'ใส่หูฟัง ฟังเพลงเพราะ ๆ กันค่ะ' },
+  { k: 'Scarf',   cat: 'body', e: ICONS.scarf,    n: 'ผ้าพันคอ',      say: 'ผ้าพันคอ อุ่นสบายเลยค่ะ' },
+  { k: 'Bowtie',  cat: 'body', e: '🎀',           n: 'โบว์ผูกคอ',     say: 'โบว์ผูกคอสีม่วง ดูเป็นสุภาพบุรุษเลยค่ะ' },
+  { k: 'Necklace', cat: 'body', e: ICONS.necklace, n: 'สร้อยไข่มุก',  say: 'สร้อยไข่มุกสวยแวววาวเลยค่ะ' },
+  { k: 'Apron',   cat: 'body', e: ICONS.apron,    n: 'ผ้ากันเปื้อน',  say: 'ผ้ากันเปื้อน พร้อมขายของแล้วค่ะ' },
+  { k: 'Cape',    cat: 'body', e: ICONS.cape,     n: 'ผ้าคลุมฮีโร่',  say: 'ผ้าคลุมซุปเปอร์ฮีโร่ บินได้เลยนะคะ ฟิ้วว' },
+  { k: 'Wings',   cat: 'body', e: ICONS.wings,    n: 'ปีกนางฟ้า',     say: 'ปีกนางฟ้า กระพือปีกได้ด้วยนะคะ' },
+  { k: 'Wand',    cat: 'hold', e: '✨',           n: 'ไม้กายสิทธิ์',   say: 'ไม้กายสิทธิ์ค่ะ วิบ วิบ เสกให้เลย' },
+  { k: 'Balloon', cat: 'hold', e: '🎈',           n: 'ลูกโป่ง',       say: 'ลูกโป่งสีแดง ลอยสูงเลยค่ะ' },
+  { k: 'Lollipop', cat: 'hold', e: '🍭',          n: 'อมยิ้มยักษ์',   say: 'อมยิ้มใหญ่มาก หวานจัง' },
+  { k: 'Bouquet', cat: 'hold', e: '💐',           n: 'ช่อดอกไม้',     say: 'ช่อดอกไม้ให้คุณแม่ค่ะ' }
 ];
 const ACCS = DRESS.map(d => d.k);
 // only one item per slot (hats, eyewear, neckwear, hand-held, back items)
@@ -1076,10 +1087,10 @@ const SCENES = {
   sunny:  { icon: '🌈', n: 'วันสดใส',    say: 'วันนี้อากาศดีจังเลยค่ะ ท้องฟ้าสดใส', bg: ['#fff9e6', '#fde492'], deco: [], photo: ['⭐', '✨', '💖', '🌈'] },
   night:  { icon: '🌙', n: 'กลางคืน',    say: 'กลางคืนแล้วค่ะ ดาวเต็มท้องฟ้าเลย', bg: ['#232a6b', '#8a6fc4'],
             deco: [['🌙', 'right:8%;top:7%'], ['⭐', 'left:8%;top:10%'], ['✨', 'left:34%;top:3%'], ['✨', 'right:28%;top:20%'], ['⭐', 'left:5%;bottom:14%']] },
-  beach:  { icon: '🏖️', n: 'ชายหาด',    say: 'ไปเที่ยวทะเลกันค่ะ คลื่นซัดฟู่ ๆ', bg: ['#8fd8ff', '#ffd27a'],
+  beach:  { icon: '🌴', n: 'ชายหาด',    say: 'ไปเที่ยวทะเลกันค่ะ คลื่นซัดฟู่ ๆ', bg: ['#8fd8ff', '#ffd27a'],
             deco: [['☀️', 'right:7%;top:6%'], ['🌴', 'left:4%;top:20%'], ['🐚', 'right:8%;bottom:8%'], ['🌊', 'left:8%;bottom:6%']] },
   garden: { icon: '🌷', n: 'สวนดอกไม้',  say: 'สวนดอกไม้สวยจังเลยค่ะ มีผีเสื้อด้วย', bg: ['#d4f6ff', '#8fe39a'],
-            deco: [['🦋', 'right:9%;top:12%'], ['🌷', 'left:6%;bottom:8%'], ['🌳', 'right:3%;bottom:10%'], ['🌼', 'left:24%;bottom:4%']] },
+            deco: [['🌸', 'right:9%;top:12%'], ['🌷', 'left:6%;bottom:8%'], ['🌳', 'right:3%;bottom:10%'], ['🌼', 'left:24%;bottom:4%']] },
   snow:   { icon: '⛄', n: 'หิมะตก',     say: 'หิมะตกแล้วค่ะ หนาวจัง บรื๋ออ', bg: ['#cfe9ff', '#ffffff'], snow: true,
             deco: [['⛄', 'right:5%;bottom:8%'], ['🌲', 'left:4%;bottom:10%']] }
 };

@@ -71,6 +71,15 @@ body {
 .prod-emoji .ui-svg {
   font-size: clamp(30px, 4vw, 40px);
 }
+.dress-emoji .ui-svg {
+  font-size: clamp(28px, 4.2vw, 44px);
+}
+.big-btn .ui-svg {
+  font-size: 24px;
+}
+.price-tag-badge .ui-svg {
+  font-size: 18px;
+}
 .tab-btn .ui-svg {
   font-size: 20px;
 }
