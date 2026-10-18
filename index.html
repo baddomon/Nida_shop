@@ -63,7 +63,7 @@ html, body {
 }
 
 body {
-  font-family: 'Mali', 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Mali', 'Sarabun', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
   color: var(--ink);
   background: linear-gradient(145deg, var(--bg1), var(--bg2), var(--bg3), var(--bg1));
   background-size: 300% 300%;
@@ -76,6 +76,41 @@ body {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* Standalone SVG UI Icons */
+.ui-svg {
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  display: inline-block;
+  overflow: visible;
+}
+.prod-emoji .ui-svg {
+  font-size: clamp(30px, 4vw, 40px);
+}
+.tab-btn .ui-svg {
+  font-size: 20px;
+}
+.header-carrot {
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Status Dot Indicator */
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: #3ec992;
+  box-shadow: 0 0 6px #3ec992;
+  margin-right: 3px;
+}
+.status-dot.offline {
+  background: #ff9e2c;
+  box-shadow: 0 0 6px #ff9e2c;
 }
 
 /* ============================================================
@@ -971,19 +1006,19 @@ h1 {
 
 <!-- Top Compact Header with Character Switcher -->
 <header>
-  <h1><span>🥕</span> ร้านน้องนิดา <span>💖</span></h1>
+  <h1><span class="header-carrot"><svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg></span> ร้านน้องนิดา <span>💖</span></h1>
   <div class="top-actions">
     <button type="button" class="pill-btn char-switch-btn" id="charToggleBtn" title="สลับตัวละคร">
       🎨 น้องขยับได้
     </button>
     <button type="button" class="pill-btn" id="soundToggle" aria-label="สลับเสียงเอฟเฟกต์">🔊 เสียงเปิด</button>
-    <button type="button" class="pill-btn" id="offlinePill">🟢 ออฟไลน์</button>
+    <button type="button" class="pill-btn" id="offlinePill"><span class="status-dot"></span> ออนไลน์</button>
   </div>
 </header>
 
 <!-- PWA Install Prompt Banner -->
 <div id="installBanner">
-  <span>📲 ติดตั้งลงหน้าจอโฮมเพื่อเล่นแบบเต็มจอ</span>
+  <span>⭐ ติดตั้งลงหน้าจอโฮมเพื่อเล่นแบบเต็มจอ</span>
   <button type="button" id="installBtn">ติดตั้ง</button>
 </div>
 
@@ -1232,16 +1267,16 @@ h1 {
     <!-- Activity Tabs -->
     <div class="tabs" role="tablist">
       <button type="button" class="tab-btn active" data-tab="shop">
-        <span>🛒</span> ซื้อของ
+        <span><svg viewBox="0 0 36 36" class="ui-svg"><path d="M6 6 L10 6 L14 23 L28 23 L31 11 L12 11" fill="none" stroke="#ff65a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="28" r="3" fill="#ff65a5"/><circle cx="26" cy="28" r="3" fill="#ff65a5"/></svg></span> ซื้อของ
       </button>
       <button type="button" class="tab-btn" data-tab="feed">
-        <span>🥕</span> ป้อนขนม
+        <span><svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg></span> ป้อนขนม
       </button>
       <button type="button" class="tab-btn" data-tab="roleplay">
         <span>💬</span> ชวนคุย
       </button>
       <button type="button" class="tab-btn" data-tab="moods">
-        <span>🥰</span> อารมณ์
+        <span>😊</span> อารมณ์
       </button>
     </div>
 
@@ -1256,8 +1291,8 @@ h1 {
             <div class="cart-total" id="cartTotal">รวม: 0 บาท</div>
           </div>
           <div class="cart-actions">
-            <button type="button" class="btn-clear" id="clearCartBtn" title="เริ่มใหม่">🧺 ล้าง</button>
-            <button type="button" class="btn-pay" id="checkoutBtn">🪙 คิดเงิน</button>
+            <button type="button" class="btn-clear" id="clearCartBtn" title="เริ่มใหม่">🔄 ล้าง</button>
+            <button type="button" class="btn-pay" id="checkoutBtn">💰 คิดเงิน</button>
           </div>
         </div>
       </div>
@@ -1280,7 +1315,7 @@ h1 {
       <!-- 4. MOODS PANEL -->
       <div class="tab-panel" id="panel-moods">
         <div class="moods-grid">
-          <button type="button" class="mood-card" data-mood="happy"><span>🥰</span>ดีใจ</button>
+          <button type="button" class="mood-card" data-mood="happy"><span>😄</span>ดีใจ</button>
           <button type="button" class="mood-card" data-mood="laugh"><span>😂</span>หัวเราะ</button>
           <button type="button" class="mood-card" data-mood="surprise"><span>😮</span>ตกใจ</button>
           <button type="button" class="mood-card" data-mood="sleepy"><span>😴</span>ง่วงนอน</button>
@@ -1492,10 +1527,16 @@ function updateConfetti() {
   }
 }
 
-function createFlyingEmoji(emoji, startX, startY, endX, endY, onComplete) {
+function createFlyingEmoji(content, startX, startY, endX, endY, onComplete) {
   const el = document.createElement('div');
   el.className = 'flying-particle';
-  el.textContent = emoji;
+  if (typeof content === 'string' && content.includes('<svg')) {
+    el.innerHTML = content;
+    const svg = el.querySelector('svg');
+    if (svg) { svg.style.width = '38px'; svg.style.height = '38px'; }
+  } else {
+    el.textContent = content;
+  }
   el.style.left = startX + 'px';
   el.style.top = startY + 'px';
   document.body.appendChild(el);
@@ -1662,17 +1703,27 @@ try {
 } catch(e){}
 
 /* ============================================================
+   SVG ICONS (Guaranteed to display on all Windows/Mobile versions)
+   ============================================================ */
+const ICONS = {
+  carrot: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg>`,
+  cart: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M6 6 L10 6 L14 23 L28 23 L31 11 L12 11" fill="none" stroke="#ff65a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="28" r="3" fill="#ff65a5"/><circle cx="26" cy="28" r="3" fill="#ff65a5"/></svg>`,
+  milk: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M13 13 L23 13 L21 4 L15 4 Z" fill="#90caf9"/><path d="M10 13 L26 13 L25 33 L11 33 Z" fill="#e3f2fd" stroke="#64b5f6" stroke-width="2"/><rect x="13" y="17" width="10" height="9" rx="2" fill="#bbdefb"/><text x="18" y="24" font-size="7" font-weight="900" text-anchor="middle" fill="#1976d2">MILK</text></svg>`,
+  bear: `<svg viewBox="0 0 36 36" class="ui-svg"><circle cx="10" cy="11" r="6" fill="#c68a4c"/><circle cx="10" cy="11" r="3" fill="#ffb8d2"/><circle cx="26" cy="11" r="6" fill="#c68a4c"/><circle cx="26" cy="11" r="3" fill="#ffb8d2"/><circle cx="18" cy="20" r="13" fill="#d49b5c"/><ellipse cx="18" cy="24" rx="6" ry="4.5" fill="#fff1d0"/><circle cx="18" cy="22" r="2" fill="#3e2723"/><circle cx="14" cy="18" r="2.2" fill="#3e2723"/><circle cx="22" cy="18" r="2.2" fill="#3e2723"/></svg>`
+};
+
+/* ============================================================
    4. SHOPPING & PRODUCTS
    ============================================================ */
 const PRODUCTS = [
-  { id: 'berry', name: 'สตรอว์เบอร์รี', emoji: '🍓', price: 5, talk: 'สตรอว์เบอร์รี หวานฉ่ำ อร่อยมากค่ะ!' },
-  { id: 'carrot', name: 'แครอทสด', emoji: '🥕', price: 2, talk: 'แครอทกรุบกรอบ ของโปรดกระต่ายเลย!' },
-  { id: 'icecream', name: 'ไอศกรีม', emoji: '🍦', price: 10, talk: 'ไอศกรีมหวานเย็น ชื่นใจที่สุดค่ะ!' },
-  { id: 'milk', name: 'นมสดกล่อง', emoji: '🥛', price: 10, talk: 'นมสดดื่มแล้วแข็งแรง ตัวโตไว ๆ นะคะ!' },
-  { id: 'cake', name: 'เค้กช็อกโกแลต', emoji: '🍰', price: 20, talk: 'เค้กชิ้นโต น่ากินมากเลยค่ะ!' },
-  { id: 'bear', name: 'ตุ๊กตาหมี', emoji: '🧸', price: 25, talk: 'น้องหมีนุ่มนิ่ม น่ารักจังเลย!' },
-  { id: 'apple', name: 'แอปเปิ้ล', emoji: '🍎', price: 5, talk: 'แอปเปิ้ลสีแดง สดใหม่จากสวนค่ะ!' },
-  { id: 'candy', name: 'อมยิ้ม', emoji: '🍭', price: 5, talk: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!' }
+  { id: 'berry', name: 'สตรอว์เบอร์รี', icon: '🍓', price: 5, talk: 'สตรอว์เบอร์รี หวานฉ่ำ อร่อยมากค่ะ!' },
+  { id: 'carrot', name: 'แครอทสด', icon: ICONS.carrot, price: 2, talk: 'แครอทกรุบกรอบ ของโปรดกระต่ายเลย!' },
+  { id: 'icecream', name: 'ไอศกรีม', icon: '🍦', price: 10, talk: 'ไอศกรีมหวานเย็น ชื่นใจที่สุดค่ะ!' },
+  { id: 'milk', name: 'นมสดกล่อง', icon: ICONS.milk, price: 10, talk: 'นมสดดื่มแล้วแข็งแรง ตัวโตไว ๆ นะคะ!' },
+  { id: 'cake', name: 'เค้กช็อกโกแลต', icon: '🍰', price: 20, talk: 'เค้กชิ้นโต น่ากินมากเลยค่ะ!' },
+  { id: 'bear', name: 'ตุ๊กตาหมี', icon: ICONS.bear, price: 25, talk: 'น้องหมีนุ่มนิ่ม น่ารักจังเลย!' },
+  { id: 'apple', name: 'แอปเปิ้ล', icon: '🍎', price: 5, talk: 'แอปเปิ้ลสีแดง สดใหม่จากสวนค่ะ!' },
+  { id: 'candy', name: 'อมยิ้ม', icon: '🍭', price: 5, talk: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!' }
 ];
 
 let cart = [];
@@ -1686,7 +1737,7 @@ function renderProducts() {
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.innerHTML = `
-      <div class="prod-emoji">${p.emoji}</div>
+      <div class="prod-emoji">${p.icon}</div>
       <div class="prod-name">${p.name}</div>
       <div class="prod-price">${p.price}฿</div>
     `;
@@ -1701,10 +1752,10 @@ function addToCart(product, event) {
   cart.push(product);
   updateCartDisplay();
 
-  // Flying emoji towards bunny
+  // Flying icon towards bunny
   const rect = event.currentTarget.getBoundingClientRect();
   const targetRect = $('stage').getBoundingClientRect();
-  createFlyingEmoji(product.emoji, rect.left + rect.width / 2, rect.top, targetRect.left + targetRect.width / 2, targetRect.top + targetRect.height * 0.6);
+  createFlyingEmoji(product.icon, rect.left + rect.width / 2, rect.top, targetRect.left + targetRect.width / 2, targetRect.top + targetRect.height * 0.6);
 
   // Character reaction
   $('stage').className = 'stage act-2';
@@ -1762,12 +1813,12 @@ function clearCart() {
    5. FEEDING THE BUNNY
    ============================================================ */
 const TREATS = [
-  { name: 'แครอท', emoji: '🥕', talk: 'ง่ำ ๆๆๆ แครอทกรุบกรอบ อร่อยชื่นใจที่สุดเลย!' },
-  { name: 'สตรอว์เบอร์รี', emoji: '🍓', talk: 'ง่ำ ๆ หวานฉ่ำ สดชื่นมาก ขอบคุณนะคะหนู!' },
-  { name: 'เค้กหวาน', emoji: '🍰', talk: 'ว้าว เค้กนุ่มละมุนลิ้น ฟินที่สุดเลยค่ะ!' },
-  { name: 'ไอศกรีม', emoji: '🍦', talk: 'เย็นเจี๊ยบ หวานหอม อร่อยชื่นใจจัง!' },
-  { name: 'แอปเปิ้ล', emoji: '🍎', talk: 'กรุบกรอบ วิตามินซีเต็มเปี่ยมเลยค่ะ!' },
-  { name: 'คุกกี้', emoji: '🍪', talk: 'คุกกี้หอมเนยมาก ๆ ขอน้องนิดากินอีกชิ้นนะคะ!' }
+  { name: 'แครอท', icon: ICONS.carrot, talk: 'ง่ำ ๆๆๆ แครอทกรุบกรอบ อร่อยชื่นใจที่สุดเลย!' },
+  { name: 'สตรอว์เบอร์รี', icon: '🍓', talk: 'ง่ำ ๆ หวานฉ่ำ สดชื่นมาก ขอบคุณนะคะหนู!' },
+  { name: 'เค้กหวาน', icon: '🍰', talk: 'ว้าว เค้กนุ่มละมุนลิ้น ฟินที่สุดเลยค่ะ!' },
+  { name: 'ไอศกรีม', icon: '🍦', talk: 'เย็นเจี๊ยบ หวานหอม อร่อยชื่นใจจัง!' },
+  { name: 'แอปเปิ้ล', icon: '🍎', talk: 'กรุบกรอบ วิตามินซีเต็มเปี่ยมเลยค่ะ!' },
+  { name: 'คุกกี้', icon: '🍪', talk: 'คุกกี้หอมเนยมาก ๆ ขอน้องนิดากินอีกชิ้นนะคะ!' }
 ];
 
 function renderFeedShelf() {
@@ -1777,7 +1828,7 @@ function renderFeedShelf() {
     const item = document.createElement('div');
     item.className = 'feed-item';
     item.innerHTML = `
-      <div class="prod-emoji">${t.emoji}</div>
+      <div class="prod-emoji">${t.icon}</div>
       <span>ป้อน ${t.name}</span>
     `;
     item.addEventListener('click', (e) => feedBunny(t, e));
@@ -1792,7 +1843,7 @@ function feedBunny(treat, event) {
   const endX = mouthRect.left > 0 ? (mouthRect.left + mouthRect.width / 2) : (window.innerWidth * 0.22);
   const endY = mouthRect.top > 0 ? (mouthRect.top + mouthRect.height / 2) : (window.innerHeight * 0.25);
 
-  createFlyingEmoji(treat.emoji, rect.left + rect.width / 2, rect.top, endX, endY, () => {
+  createFlyingEmoji(treat.icon, rect.left + rect.width / 2, rect.top, endX, endY, () => {
     SoundFX.munch();
     $('stage').className = 'stage mood-eating';
     startSpeakingState();
@@ -1981,10 +2032,10 @@ installBtn.addEventListener('click', async () => {
 function updateOnlineStatus() {
   const pill = $('offlinePill');
   if (navigator.onLine) {
-    pill.textContent = '🟢 ออนไลน์';
+    pill.innerHTML = '<span class="status-dot"></span> ออนไลน์';
     pill.style.borderColor = 'rgba(62, 201, 146, 0.4)';
   } else {
-    pill.textContent = '🟡 ออฟไลน์';
+    pill.innerHTML = '<span class="status-dot offline"></span> ออฟไลน์';
     pill.style.borderColor = 'rgba(255, 158, 44, 0.4)';
   }
 }

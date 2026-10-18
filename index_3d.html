@@ -7,8 +7,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="ร้านนิดา">
+<link rel="icon" type="image/jpeg" href="rabbit.jpg">
 <link rel="apple-touch-icon" href="rabbit.jpg">
 <link rel="manifest" href="manifest.json">
+<meta name="description" content="เว็บแอปเล่นบทบาทสมมติร้านค้าน่ารัก สำหรับน้องนิดา เล่นได้ทั้งออนไลน์และออฟไลน์">
+<meta property="og:title" content="🐰 ร้านน้องนิดา 2.0 | เล่นขายของ & พูดคุย">
+<meta property="og:description" content="เว็บแอปเล่นบทบาทสมมติร้านค้าน่ารัก สำหรับน้องนิดา เล่นได้ทั้งออนไลน์และออฟไลน์">
+<meta property="og:image" content="rabbit.jpg">
+<meta property="og:type" content="website">
 <title>🐰 ร้านน้องนิดา 2.0 | เล่นขายของ & พูดคุย</title>
 <link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -57,7 +63,7 @@ html, body {
 }
 
 body {
-  font-family: 'Mali', 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Mali', 'Sarabun', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
   color: var(--ink);
   background: linear-gradient(145deg, var(--bg1), var(--bg2), var(--bg3), var(--bg1));
   background-size: 300% 300%;
@@ -72,25 +78,60 @@ body {
   100% { background-position: 0% 50%; }
 }
 
+/* Standalone SVG UI Icons */
+.ui-svg {
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  display: inline-block;
+  overflow: visible;
+}
+.prod-emoji .ui-svg {
+  font-size: clamp(30px, 4vw, 40px);
+}
+.tab-btn .ui-svg {
+  font-size: 20px;
+}
+.header-carrot {
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Status Dot Indicator */
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: #3ec992;
+  box-shadow: 0 0 6px #3ec992;
+  margin-right: 3px;
+}
+.status-dot.offline {
+  background: #ff9e2c;
+  box-shadow: 0 0 6px #ff9e2c;
+}
+
 /* ============================================================
-   TOP BAR (Compact Header)
+   TOP BAR (Compact Header with Character Switcher)
    ============================================================ */
 header {
-  height: 44px;
-  min-height: 44px;
+  height: 46px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
-  background: rgba(255, 255, 255, 0.55);
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(8px);
-  border-bottom: 1.5px solid rgba(255, 126, 182, 0.2);
+  border-bottom: 1.5px solid rgba(255, 126, 182, 0.25);
   z-index: 10;
 }
 
 h1 {
   margin: 0;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -100,15 +141,15 @@ h1 {
 
 .top-actions {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
 }
 
 .pill-btn {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   border: 1.5px solid rgba(255, 126, 182, 0.35);
   border-radius: 999px;
-  padding: 3px 9px;
+  padding: 4px 9px;
   font-size: 12px;
   font-weight: 700;
   color: var(--ink);
@@ -116,9 +157,16 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  transition: transform 0.1s;
+  transition: transform 0.1s, background 0.15s;
 }
 .pill-btn:active { transform: scale(0.94); }
+
+.char-switch-btn {
+  background: linear-gradient(135deg, #fff0f6, #ffe3ed);
+  border-color: #ff65a5;
+  color: #d92d6b;
+  font-weight: 800;
+}
 
 /* PWA Install Banner */
 #installBanner {
@@ -150,8 +198,8 @@ h1 {
   display: flex;
   flex-direction: row;
   overflow: hidden;
-  height: calc(100vh - 44px);
-  height: calc(100dvh - 44px);
+  height: calc(100vh - 46px);
+  height: calc(100dvh - 46px);
 }
 
 /* --- LEFT PANEL: BUNNY CHARACTER & SPEECH (ALWAYS VISIBLE) --- */
@@ -161,15 +209,15 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
+  padding: 6px 10px;
   position: relative;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.45) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(255,255,255,0.5) 0%, transparent 72%);
 }
 
 .stage {
   position: relative;
-  width: min(100%, 320px);
-  max-height: calc(100% - 65px);
+  width: min(100%, 330px);
+  max-height: calc(100% - 64px);
   aspect-ratio: 1 / 1;
   cursor: pointer;
   touch-action: manipulation;
@@ -178,8 +226,18 @@ h1 {
   justify-content: center;
 }
 
-/* 3D Fluffy Rabbit Card Frame */
-.bunny-card {
+/* Character Views Container */
+.char-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* 1. 3D Photo Character Card */
+.char-3d-card {
   position: relative;
   width: 100%;
   height: 100%;
@@ -191,8 +249,7 @@ h1 {
   animation: bunnyIdle 3.2s ease-in-out infinite;
   transition: box-shadow 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
-.bunny-card img {
+.char-3d-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -200,12 +257,29 @@ h1 {
   pointer-events: none;
 }
 
-/* Speaking Aura Glow */
-#stage.speaking .bunny-card {
-  box-shadow: 0 0 25px rgba(255, 101, 165, 0.65), 0 0 0 5px #ff7eb6;
+/* 2. Articulated Vector Animated Bunny (Styled like 3D rabbit) */
+.char-vector-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(255, 126, 182, 0.28), 0 0 0 4px rgba(255, 255, 255, 0.95);
+  background: radial-gradient(circle at center, #fff9e6 0%, #fde492 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center bottom;
+  animation: bunnyIdle 3.2s ease-in-out infinite;
 }
 
-/* Interactive touch target for tummy */
+.char-vector-card svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Interactive Touch Targets */
 #bunnyTummy {
   position: absolute;
   width: 44%;
@@ -214,10 +288,9 @@ h1 {
   left: 28%;
   cursor: pointer;
   border-radius: 50%;
-  z-index: 5;
+  z-index: 6;
 }
 
-/* Target mouth coordinates for feeding */
 #mouthTarget {
   position: absolute;
   width: 20%;
@@ -227,7 +300,13 @@ h1 {
   pointer-events: none;
 }
 
-/* Floating Price Tag Badge */
+/* Speaking Aura Glow */
+#stage.speaking .char-3d-card,
+#stage.speaking .char-vector-card {
+  box-shadow: 0 0 26px rgba(255, 101, 165, 0.7), 0 0 0 5px #ff7eb6;
+}
+
+/* Dynamic Price Tag Badge */
 .price-tag-badge {
   position: absolute;
   right: -4px;
@@ -258,7 +337,7 @@ h1 {
   100% { transform: translateY(-5px) rotate(-2deg); }
 }
 
-/* Floating Hearts & Stars */
+/* Hearts & Stars */
 .hearts-burst {
   position: absolute;
   inset: 0;
@@ -272,8 +351,8 @@ h1 {
   font-size: 28px;
   animation: heartFloat 1.8s ease-out infinite;
 }
-.hearts-burst span:nth-child(1) { left: 10%; bottom: 35%; animation-delay: 0s; }
-.hearts-burst span:nth-child(2) { right: 8%; bottom: 42%; animation-delay: 0.5s; }
+.hearts-burst span:nth-child(1) { left: 8%; bottom: 35%; animation-delay: 0s; }
+.hearts-burst span:nth-child(2) { right: 6%; bottom: 42%; animation-delay: 0.5s; }
 .hearts-burst span:nth-child(3) { left: 45%; top: -8px; animation-delay: 1s; }
 @keyframes heartFloat {
   0% { transform: translateY(10px) scale(0.6); opacity: 0; }
@@ -294,72 +373,186 @@ h1 {
 }
 
 /* ============================================================
-   BUNNY ANIMATIONS
+   ARTICULATED VECTOR BODY ANIMATIONS (Movable parts)
+   ============================================================ */
+#rigHead {
+  transform-origin: 200px 310px;
+  animation: rigHeadSway 4s ease-in-out infinite;
+}
+@keyframes rigHeadSway {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+#rigEarL {
+  transform-origin: 145px 150px;
+  animation: rigEarL 3.6s ease-in-out infinite;
+}
+#rigEarR {
+  transform-origin: 255px 150px;
+  animation: rigEarR 3.6s ease-in-out infinite 0.7s;
+}
+@keyframes rigEarL {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(4deg); }
+}
+@keyframes rigEarR {
+  0%, 100% { transform: rotate(2deg); }
+  45% { transform: rotate(-3deg); }
+  50% { transform: rotate(8deg); }
+  55% { transform: rotate(-3deg); }
+}
+
+/* Eyes Blinking & Pupils */
+.rig-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rigBlink 4s infinite;
+}
+@keyframes rigBlink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.08); }
+}
+
+#rigPupils {
+  animation: rigLook 6s ease-in-out infinite;
+}
+@keyframes rigLook {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(4px); }
+  65% { transform: translateX(-4px); }
+}
+
+/* Cheeks Glow */
+.rig-cheek {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rigCheekPulse 2.6s ease-in-out infinite;
+}
+@keyframes rigCheekPulse { 50% { transform: scale(1.18); opacity: 0.95; } }
+
+/* Arms Movement */
+#rigArmL {
+  transform-origin: 130px 335px;
+  animation: rigArmL 3s ease-in-out infinite;
+}
+#rigArmR {
+  transform-origin: 270px 335px;
+  animation: rigArmR 3s ease-in-out infinite;
+}
+@keyframes rigArmL { 50% { transform: rotate(4deg); } }
+@keyframes rigArmR { 50% { transform: rotate(-4deg); } }
+
+/* ============================================================
+   ROLEPLAY & MOOD ANIMATIONS (Applies to both characters)
    ============================================================ */
 @keyframes bunnyIdle {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-6px) scale(1.015); }
 }
 
-.act-1 #bunnyCard { animation: bunnyHop 0.5s ease-in-out infinite; }
+/* 1. Welcoming (Hop & Wave) */
+.act-1 .char-3d-card { animation: bunnyHop 0.5s ease-in-out infinite; }
+.act-1 .char-vector-card { animation: bunnyHop 0.5s ease-in-out infinite; }
+.act-1 #rigArmR { animation: rigWaveR 0.45s ease-in-out infinite; }
+.act-1 #rigEarR { animation: rigEarL 0.45s ease-in-out infinite; }
 @keyframes bunnyHop {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-18px) scale(1.04) rotate(2deg); }
+  50% { transform: translateY(-16px) scale(1.04) rotate(2deg); }
+}
+@keyframes rigWaveR {
+  0%, 100% { transform: rotate(-130deg); }
+  50% { transform: rotate(-165deg); }
 }
 
-.act-2 #bunnyCard { animation: bunnyTilt 1.2s ease-in-out infinite; }
+/* 2. Asking (Tilt & Perk) */
+.act-2 .char-3d-card { animation: bunnyTilt 1.2s ease-in-out infinite; }
+.act-2 .char-vector-card { animation: bunnyTilt 1.2s ease-in-out infinite; }
+.act-2 #rigHead { animation: none; transform: rotate(7deg); }
+.act-2 #rigEarL { transform: rotate(-8deg); }
+.act-2 #rigArmL { transform: rotate(-110deg); }
 @keyframes bunnyTilt {
   0%, 100% { transform: rotate(-3deg); }
   50% { transform: rotate(4deg) translateY(-4px); }
 }
 
-.act-3 #bunnyCard { animation: bunnyNod 0.7s ease-in-out infinite; }
+/* 3. Price Tag (Proud Nod) */
+.act-3 .char-3d-card { animation: bunnyNod 0.7s ease-in-out infinite; }
+.act-3 .char-vector-card { animation: bunnyNod 0.7s ease-in-out infinite; }
+.act-3 #rigHead { animation: rigNod 0.7s ease-in-out infinite; }
+.act-3 #rigArmR { transform: rotate(-95deg); }
 @keyframes bunnyNod {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(8px) scale(1.02); }
 }
+@keyframes rigNod { 50% { transform: translateY(6px) rotate(2deg); } }
 
-.act-4 #bunnyCard { animation: bunnyBow 1.6s ease-in-out infinite; }
+/* 4. Thank You (Bow & Love) */
+.act-4 .char-3d-card { animation: bunnyBow 1.6s ease-in-out infinite; }
+.act-4 .char-vector-card { animation: bunnyBow 1.6s ease-in-out infinite; }
 .act-4 .hearts-burst { opacity: 1; }
+.act-4 #rigHead { animation: rigBow 1.6s ease-in-out infinite; }
+.act-4 #rigArmL { animation: rigWaveL 0.5s ease-in-out infinite; }
+.act-4 #rigArmR { animation: rigWaveR 0.5s ease-in-out infinite; }
 @keyframes bunnyBow {
   0%, 100% { transform: translateY(0) rotate(0); }
   40% { transform: translateY(14px) rotate(3deg); }
 }
+@keyframes rigBow { 40% { transform: translateY(16px) rotate(4deg); } }
+@keyframes rigWaveL { 0%, 100% { transform: rotate(130deg); } 50% { transform: rotate(165deg); } }
 
-/* Mood Animations */
-#stage.mood-happy #bunnyCard { animation: bunnyHappy 0.45s ease-in-out 3; }
+/* Moods */
+#stage.mood-happy .char-3d-card,
+#stage.mood-happy .char-vector-card { animation: bunnyHappy 0.45s ease-in-out 3; }
 #stage.mood-happy .hearts-burst { opacity: 1; }
+#stage.mood-happy #happyEyes { display: block !important; }
+#stage.mood-happy .rig-normal-eyes { display: none; }
 @keyframes bunnyHappy {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-20px) scale(1.06); }
 }
 
-#stage.mood-laugh #bunnyCard { animation: bunnyLaugh 0.22s ease-in-out 7; }
+#stage.mood-laugh .char-3d-card,
+#stage.mood-laugh .char-vector-card { animation: bunnyLaugh 0.22s ease-in-out 7; }
 #stage.mood-laugh .hearts-burst { opacity: 1; }
+#stage.mood-laugh #happyEyes { display: block !important; }
+#stage.mood-laugh .rig-normal-eyes { display: none; }
 @keyframes bunnyLaugh {
   0%, 100% { transform: rotate(-4deg); }
   50% { transform: rotate(5deg) translateY(-4px); }
 }
 
-#stage.mood-surprise #bunnyCard { animation: bunnySurprise 0.35s ease-out 2; }
+#stage.mood-surprise .char-3d-card,
+#stage.mood-surprise .char-vector-card { animation: bunnySurprise 0.35s ease-out 2; }
+#stage.mood-surprise #rigEarL { transform: rotate(12deg) scale(1.1); }
+#stage.mood-surprise #rigEarR { transform: rotate(-12deg) scale(1.1); }
 @keyframes bunnySurprise {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.09) translateY(-10px); }
 }
 
-#stage.mood-sleepy #bunnyCard { animation: bunnySleep 2.4s ease-in-out 2; }
+#stage.mood-sleepy .char-3d-card,
+#stage.mood-sleepy .char-vector-card { animation: bunnySleep 2.4s ease-in-out 2; }
+#stage.mood-sleepy #sleepyEyes { display: block !important; }
+#stage.mood-sleepy .rig-normal-eyes { display: none; }
+#stage.mood-sleepy #rigEarL { transform: rotate(14deg); }
+#stage.mood-sleepy #rigEarR { transform: rotate(-14deg); }
 @keyframes bunnySleep {
   0%, 100% { transform: rotate(0); filter: brightness(1); }
   50% { transform: rotate(5deg) translateY(6px); filter: brightness(0.94); }
 }
 
-#stage.mood-dance #bunnyCard { animation: bunnyDance 0.38s ease-in-out 7; }
+#stage.mood-dance .char-3d-card,
+#stage.mood-dance .char-vector-card { animation: bunnyDance 0.38s ease-in-out 7; }
+#stage.mood-dance #rigArmL { animation: rigWaveL 0.38s ease-in-out infinite; }
+#stage.mood-dance #rigArmR { animation: rigWaveR 0.38s ease-in-out infinite; }
 @keyframes bunnyDance {
   0%, 100% { transform: translateX(-10px) rotate(-5deg); }
   50% { transform: translateX(10px) rotate(5deg); }
 }
 
-#stage.mood-eating #bunnyCard { animation: bunnyMunch 0.24s ease-in-out infinite; }
+#stage.mood-eating .char-3d-card,
+#stage.mood-eating .char-vector-card { animation: bunnyMunch 0.24s ease-in-out infinite; }
 @keyframes bunnyMunch {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05, 0.95) translateY(4px); }
@@ -367,13 +560,13 @@ h1 {
 
 /* Speech Bubble under character */
 .bubble-box {
-  width: min(100%, 340px);
+  width: min(100%, 330px);
   position: relative;
   margin-top: 6px;
 }
 
 .bubble {
-  min-height: 50px;
+  min-height: 48px;
   background: var(--card);
   border-radius: 18px;
   padding: 8px 42px 8px 14px;
@@ -412,7 +605,7 @@ h1 {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 10px 14px 12px;
+  padding: 8px 12px 10px;
   overflow: hidden;
   justify-content: space-between;
 }
@@ -531,8 +724,8 @@ h1 {
 
 /* Cart Checkout Bar */
 .cart-bar {
-  height: 58px;
-  min-height: 58px;
+  height: 56px;
+  min-height: 56px;
   background: var(--card);
   border-radius: 18px;
   padding: 6px 12px;
@@ -725,15 +918,15 @@ h1 {
 
   .char-panel {
     flex: 0 0 38%;
-    padding: 4px 10px;
+    padding: 3px 8px;
   }
 
   .stage {
-    width: min(85vw, 185px);
-    max-height: calc(100% - 48px);
+    width: min(85vw, 180px);
+    max-height: calc(100% - 46px);
   }
 
-  .bunny-card {
+  .char-3d-card, .char-vector-card {
     border-radius: 22px;
   }
 
@@ -742,68 +935,68 @@ h1 {
   }
 
   .bubble {
-    min-height: 42px;
-    font-size: 14px;
-    padding: 6px 36px 6px 10px;
+    min-height: 40px;
+    font-size: 13.5px;
+    padding: 5px 34px 5px 10px;
     border-radius: 14px;
   }
 
   .bubble-replay {
-    width: 28px;
-    height: 28px;
-    font-size: 13px;
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
     right: 5px;
   }
 
   .control-panel {
     flex: 1;
-    padding: 6px 10px 10px;
+    padding: 5px 8px 8px;
   }
 
   .tabs {
-    gap: 6px;
-    margin-bottom: 6px;
+    gap: 5px;
+    margin-bottom: 5px;
   }
 
   .tab-btn {
     padding: 5px 2px;
-    font-size: 12px;
+    font-size: 11.5px;
     border-radius: 12px;
   }
-  .tab-btn span { font-size: 16px; }
+  .tab-btn span { font-size: 15px; }
 
   .products-grid {
-    gap: 6px;
-    margin-bottom: 6px;
+    gap: 5px;
+    margin-bottom: 5px;
   }
 
   .prod-card {
-    border-radius: 14px;
-    padding: 4px 2px;
+    border-radius: 13px;
+    padding: 3px 2px;
   }
-  .prod-emoji { font-size: 26px; }
-  .prod-name { font-size: 11px; }
-  .prod-price { font-size: 11px; padding: 1px 4px; }
+  .prod-emoji { font-size: 24px; }
+  .prod-name { font-size: 10.5px; }
+  .prod-price { font-size: 10.5px; padding: 1px 4px; }
 
   .cart-bar {
-    height: 48px;
-    min-height: 48px;
-    padding: 4px 10px;
-    border-radius: 14px;
+    height: 46px;
+    min-height: 46px;
+    padding: 4px 8px;
+    border-radius: 13px;
   }
-  .cart-total { font-size: 16px; }
-  .btn-pay { padding: 6px 12px; font-size: 14px; border-radius: 12px; }
-  .btn-clear { padding: 6px 8px; font-size: 12px; border-radius: 12px; }
+  .cart-total { font-size: 15px; }
+  .btn-pay { padding: 5px 10px; font-size: 13px; border-radius: 11px; }
+  .btn-clear { padding: 5px 7px; font-size: 11px; border-radius: 11px; }
 
-  .feed-shelf { gap: 6px; }
-  .feed-item { border-radius: 14px; padding: 6px 2px; }
-  .feed-item .prod-emoji { font-size: 28px; }
-  .feed-item span:last-child { font-size: 12px; margin-top: 2px; }
+  .feed-shelf { gap: 5px; }
+  .feed-item { border-radius: 13px; padding: 5px 2px; }
+  .feed-item .prod-emoji { font-size: 26px; }
+  .feed-item span:last-child { font-size: 11.5px; margin-top: 2px; }
 
-  .big-btn { border-radius: 16px; font-size: 15px; }
-  .moods-grid { gap: 6px; }
-  .mood-card { border-radius: 14px; padding: 4px 2px; font-size: 12px; }
-  .mood-card span { font-size: 24px; }
+  .big-btn { border-radius: 15px; font-size: 14px; }
+  .moods-grid { gap: 5px; }
+  .mood-card { border-radius: 13px; padding: 4px 2px; font-size: 11.5px; }
+  .mood-card span { font-size: 22px; }
 }
 </style>
 </head>
@@ -811,25 +1004,28 @@ h1 {
 
 <canvas id="confettiCanvas"></canvas>
 
-<!-- Top Compact Header -->
+<!-- Top Compact Header with Character Switcher -->
 <header>
-  <h1><span>🥕</span> ร้านน้องนิดา <span>💖</span></h1>
+  <h1><span class="header-carrot"><svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg></span> ร้านน้องนิดา <span>💖</span></h1>
   <div class="top-actions">
+    <button type="button" class="pill-btn char-switch-btn" id="charToggleBtn" title="สลับตัวละคร">
+      🎨 น้องขยับได้
+    </button>
     <button type="button" class="pill-btn" id="soundToggle" aria-label="สลับเสียงเอฟเฟกต์">🔊 เสียงเปิด</button>
-    <button type="button" class="pill-btn" id="offlinePill">🟢 ออฟไลน์</button>
+    <button type="button" class="pill-btn" id="offlinePill"><span class="status-dot"></span> ออนไลน์</button>
   </div>
 </header>
 
 <!-- PWA Install Prompt Banner -->
 <div id="installBanner">
-  <span>📲 ติดตั้งลงหน้าจอโฮมเพื่อเล่นแบบเต็มจอ</span>
+  <span>⭐ ติดตั้งลงหน้าจอโฮมเพื่อเล่นแบบเต็มจอ</span>
   <button type="button" id="installBtn">ติดตั้ง</button>
 </div>
 
 <!-- Main Split App Container -->
 <div class="app-container">
 
-  <!-- LEFT: 3D Cute Bunny Character (rabbit.jpg / rabbit.jfif) -->
+  <!-- LEFT: Character Stage (Switchable between Vector Animated & 3D Photo) -->
   <div class="char-panel">
     <div class="stage" id="stage" role="button" tabindex="0" aria-label="แตะน้องนิดาเพื่อเล่นด้วยกัน">
       <span class="star" style="left:1%;top:4%">⭐</span>
@@ -837,15 +1033,215 @@ h1 {
       <span class="star" style="left:3%;bottom:10%;animation-delay:1.2s">💖</span>
       <span class="star" style="right:3%;bottom:12%;animation-delay:1.8s">🌈</span>
 
-      <!-- 3D Fluffy Rabbit Card -->
-      <div class="bunny-card" id="bunnyCard">
-        <picture>
-          <source srcset="rabbit.jpg" type="image/jpeg">
-          <img src="rabbit.jfif" id="rabbitImg" alt="น้องนิดา กระต่ายพนักงานขาย" onerror="this.src='rabbit.jfif'">
-        </picture>
-        <div id="bunnyTummy" title="จั๊กจี้พุงน้องนิดา"></div>
-        <div id="mouthTarget"></div>
+      <!-- 1. ARTICULATED ANIMATED BUNNY (Styled to match rabbit.jfif) -->
+      <div class="char-view" id="viewVector">
+        <div class="char-vector-card" id="bunnyVectorCard">
+          <svg viewBox="0 0 400 440" aria-label="น้องนิดากระต่ายขยับได้">
+            <defs>
+              <!-- Eye Blue Gradient (Inspired by rabbit.jfif) -->
+              <radialGradient id="eyeBlueGrad" cx="50%" cy="40%" r="55%">
+                <stop offset="0%" stop-color="#72d6ff"/>
+                <stop offset="60%" stop-color="#2a7bcc"/>
+                <stop offset="100%" stop-color="#14437a"/>
+              </radialGradient>
+              <!-- Cheek Blush Gradient -->
+              <radialGradient id="cheekBlush" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ff7ea8" stop-opacity="0.85"/>
+                <stop offset="60%" stop-color="#ffa0c0" stop-opacity="0.45"/>
+                <stop offset="100%" stop-color="#ffa0c0" stop-opacity="0"/>
+              </radialGradient>
+              <!-- Pink Gingham Plaid Pattern for dress -->
+              <pattern id="ginghamDress" width="16" height="16" patternUnits="userSpaceOnUse">
+                <rect width="16" height="16" fill="#ffb8d1"/>
+                <rect x="0" y="0" width="8" height="8" fill="#ffa2c2"/>
+                <rect x="8" y="8" width="8" height="8" fill="#ffa2c2"/>
+                <rect x="0" y="8" width="8" height="8" fill="#ffd1e3"/>
+                <rect x="8" y="0" width="8" height="8" fill="#ffd1e3"/>
+              </pattern>
+              <!-- Yellow Plaid for Ear Ribbon Bow -->
+              <pattern id="yellowPlaid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <rect width="10" height="10" fill="#ffd84d"/>
+                <rect x="0" y="0" width="5" height="5" fill="#f5be25"/>
+                <rect x="5" y="5" width="5" height="5" fill="#f5be25"/>
+              </pattern>
+            </defs>
+
+            <!-- Lower Body & Little Feet -->
+            <g id="rigFeet">
+              <ellipse cx="170" cy="425" rx="20" ry="11" fill="#ffa2c2" stroke="#e890b0" stroke-width="2.5"/>
+              <ellipse cx="230" cy="425" rx="20" ry="11" fill="#ffa2c2" stroke="#e890b0" stroke-width="2.5"/>
+            </g>
+
+            <!-- Pink Checkered Dress & Body -->
+            <g id="rigBody">
+              <!-- Fluffy body under dress -->
+              <ellipse cx="200" cy="380" rx="75" ry="60" fill="#fffaf5" stroke="#ecd0dc" stroke-width="3"/>
+              <!-- Gingham Dress Skirt -->
+              <path d="M142 335 Q200 325 258 335 L276 415 Q200 425 124 415 Z" fill="url(#ginghamDress)" stroke="#e88dae" stroke-width="3.5"/>
+              <!-- Ruffle Hem -->
+              <path d="M124 415 Q143 424 162 417 Q181 425 200 417 Q219 425 238 417 Q257 425 276 415" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+              <!-- Dress Waist Ribbon -->
+              <rect x="150" y="332" width="100" height="10" rx="5" fill="#ff7aa8"/>
+            </g>
+
+            <!-- Left Arm & Paw -->
+            <g id="rigArmL">
+              <!-- Puffy shoulder sleeve -->
+              <ellipse cx="132" cy="336" rx="15" ry="12" fill="#ffb8d1" stroke="#e88dae" stroke-width="2.5"/>
+              <!-- Arm -->
+              <rect x="118" y="338" width="26" height="58" rx="13" fill="#fffaf5" stroke="#ecd0dc" stroke-width="3.5"/>
+              <!-- White paw -->
+              <circle cx="131" cy="396" r="14" fill="#fffaf5" stroke="#ecd0dc" stroke-width="3.5"/>
+            </g>
+
+            <!-- Right Arm & Paw -->
+            <g id="rigArmR">
+              <!-- Puffy shoulder sleeve -->
+              <ellipse cx="268" cy="336" rx="15" ry="12" fill="#ffb8d1" stroke="#e88dae" stroke-width="2.5"/>
+              <!-- Arm -->
+              <rect x="256" y="338" width="26" height="58" rx="13" fill="#fffaf5" stroke="#ecd0dc" stroke-width="3.5"/>
+              <!-- White paw -->
+              <circle cx="269" cy="396" r="14" fill="#fffaf5" stroke="#ecd0dc" stroke-width="3.5"/>
+            </g>
+
+            <!-- Golden Egg / Shop Item in Paws (like in 3D picture) -->
+            <g id="rigHeldItem">
+              <ellipse cx="200" cy="365" rx="22" ry="26" fill="#ffd13b" stroke="#e89810" stroke-width="3"/>
+              <circle cx="193" cy="358" r="3" fill="#ffffff" opacity="0.9"/>
+              <circle cx="207" cy="368" r="3" fill="#ffffff" opacity="0.9"/>
+              <circle cx="196" cy="378" r="2.5" fill="#ffffff" opacity="0.9"/>
+              <!-- Little paws resting on the item -->
+              <circle cx="180" cy="365" r="9" fill="#fffaf5" stroke="#ecd0dc" stroke-width="2.5"/>
+              <circle cx="220" cy="365" r="9" fill="#fffaf5" stroke="#ecd0dc" stroke-width="2.5"/>
+            </g>
+
+            <!-- HEAD RIG (Movable & expressive) -->
+            <g id="rigHead">
+              <!-- Left Ear -->
+              <g id="rigEarL">
+                <ellipse cx="145" cy="85" rx="36" ry="86" fill="#fffaf5" stroke="#ecd0dc" stroke-width="3.5"/>
+                <ellipse cx="145" cy="92" rx="19" ry="65" fill="#ffb8cf"/>
+              </g>
+
+              <!-- Right Ear -->
+              <g id="rigEarR">
+                <ellipse cx="255" cy="85" rx="36" ry="86" fill="#fffaf5" stroke="#ecd0dc" stroke-width="3.5"/>
+                <ellipse cx="255" cy="92" rx="19" ry="65" fill="#ffb8cf"/>
+              </g>
+
+              <!-- Head Base (Chubby Cute Face) -->
+              <ellipse cx="200" cy="225" rx="112" ry="96" fill="#fffaf5" stroke="#ecd0dc" stroke-width="3.5"/>
+
+              <!-- Signature Yellow Plaid Bow on Right Ear (from rabbit.jfif) -->
+              <g id="rigBow" transform="translate(230, 95) rotate(15)">
+                <path d="M35 15 L0 0 L0 30 Z" fill="url(#yellowPlaid)" stroke="#dfa312" stroke-width="2"/>
+                <path d="M35 15 L70 0 L70 30 Z" fill="url(#yellowPlaid)" stroke="#dfa312" stroke-width="2"/>
+                <!-- Ribbon Knot -->
+                <ellipse cx="35" cy="15" rx="8" ry="10" fill="#ffd84d" stroke="#dfa312" stroke-width="2"/>
+              </g>
+
+              <!-- Cheeks (Soft Airbrushed Blush) -->
+              <ellipse class="rig-cheek" cx="118" cy="252" rx="26" ry="15" fill="url(#cheekBlush)"/>
+              <ellipse class="rig-cheek" cx="282" cy="252" rx="26" ry="15" fill="url(#cheekBlush)"/>
+
+              <!-- NORMAL BIG BLUE EYES (Signature Pixar Style from 3D photo) -->
+              <g class="rig-normal-eyes">
+                <!-- Eye Whites -->
+                <g class="rig-eye">
+                  <ellipse cx="148" cy="205" rx="26" ry="32" fill="#ffffff" stroke="#ecd0dc" stroke-width="2"/>
+                </g>
+                <g class="rig-eye">
+                  <ellipse cx="252" cy="205" rx="26" ry="32" fill="#ffffff" stroke="#ecd0dc" stroke-width="2"/>
+                </g>
+
+                <!-- Pupils with Blue Gradient & Dual Highlights -->
+                <g id="rigPupils">
+                  <!-- Left Pupil -->
+                  <g class="rig-eye">
+                    <ellipse cx="148" cy="207" rx="19" ry="24" fill="url(#eyeBlueGrad)"/>
+                    <ellipse cx="148" cy="207" rx="11" ry="14" fill="#0d1b2a"/>
+                    <!-- Catchlight Dots -->
+                    <circle cx="141" cy="197" r="6" fill="#ffffff"/>
+                    <circle cx="156" cy="216" r="3" fill="#ffffff"/>
+                    <circle cx="151" cy="221" r="1.5" fill="#ffffff"/>
+                  </g>
+                  <!-- Right Pupil -->
+                  <g class="rig-eye">
+                    <ellipse cx="252" cy="207" rx="19" ry="24" fill="url(#eyeBlueGrad)"/>
+                    <ellipse cx="252" cy="207" rx="11" ry="14" fill="#0d1b2a"/>
+                    <!-- Catchlight Dots -->
+                    <circle cx="245" cy="197" r="6" fill="#ffffff"/>
+                    <circle cx="260" cy="216" r="3" fill="#ffffff"/>
+                    <circle cx="255" cy="221" r="1.5" fill="#ffffff"/>
+                  </g>
+                </g>
+
+                <!-- Eyelashes (3 delicate lashes on each eyelid) -->
+                <g stroke="#2d1624" stroke-width="3" stroke-linecap="round" fill="none">
+                  <!-- Left Eye Lashes -->
+                  <path d="M126 195 Q120 188 116 186"/>
+                  <path d="M134 185 Q130 176 128 174"/>
+                  <path d="M148 178 Q146 170 145 168"/>
+                  <!-- Right Eye Lashes -->
+                  <path d="M274 195 Q280 188 284 186"/>
+                  <path d="M266 185 Q270 176 272 174"/>
+                  <path d="M252 178 Q254 170 255 168"/>
+                </g>
+              </g>
+
+              <!-- HAPPY EYES OVERLAY (Arc shaped ^ ^) -->
+              <g id="happyEyes" style="display:none;" stroke="#d94a6e" stroke-width="6" stroke-linecap="round" fill="none">
+                <path d="M128 210 Q148 185 168 210"/>
+                <path d="M232 210 Q252 185 272 210"/>
+              </g>
+
+              <!-- SLEEPY EYES OVERLAY (Half closed - -) -->
+              <g id="sleepyEyes" style="display:none;" stroke="#6b3a56" stroke-width="5" stroke-linecap="round" fill="none">
+                <path d="M130 214 Q148 226 166 214"/>
+                <path d="M234 214 Q252 226 270 214"/>
+              </g>
+
+              <!-- Whiskers -->
+              <g stroke="#d5b6c6" stroke-width="2.5" stroke-linecap="round">
+                <path d="M96 260 L60 254"/>
+                <path d="M96 270 L60 274"/>
+                <path d="M304 260 L340 254"/>
+                <path d="M304 270 L340 274"/>
+              </g>
+
+              <!-- Tiny Button Pink Nose -->
+              <path d="M188 244 Q200 238 212 244 Q206 257 200 259 Q194 257 188 244 Z" fill="#ff7fa8"/>
+
+              <!-- Dynamic Mouth (Opens & Closes during speech / eating) -->
+              <!-- Closed Smile -->
+              <path id="smile" d="M200 258 L200 268 M200 268 Q182 284 165 268 M200 268 Q218 284 235 268" stroke="#d94a6e" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+              
+              <!-- Open Talking / Eating Mouth -->
+              <g id="open" style="display:none;">
+                <ellipse id="mouthE" cx="200" cy="278" rx="22" ry="12" fill="#8e1b38"/>
+                <!-- Cute Bunny Front Tooth -->
+                <rect x="193" y="267" width="14" height="9" rx="3" fill="#ffffff"/>
+                <!-- Pink Tongue -->
+                <ellipse id="tongue" cx="200" cy="285" rx="14" ry="5" fill="#ff82a0"/>
+              </g>
+            </g>
+          </svg>
+        </div>
       </div>
+
+      <!-- 2. 3D PHOTO CARD (rabbit.jfif / rabbit.jpg) -->
+      <div class="char-view" id="view3D" style="display:none;">
+        <div class="char-3d-card" id="bunny3DCard">
+          <picture>
+            <source srcset="rabbit.jpg" type="image/jpeg">
+            <img src="rabbit.jfif" id="rabbitImg" alt="น้องนิดา กระต่าย 3D" onerror="this.src='rabbit.jfif'">
+          </picture>
+        </div>
+      </div>
+
+      <!-- Invisible Tummy Touch Zone & Mouth Target (Both Characters) -->
+      <div id="bunnyTummy" title="จั๊กจี้พุงน้องนิดา"></div>
+      <div id="mouthTarget"></div>
 
       <!-- Floating Price Tag -->
       <div class="price-tag-badge" id="tag">
@@ -871,16 +1267,16 @@ h1 {
     <!-- Activity Tabs -->
     <div class="tabs" role="tablist">
       <button type="button" class="tab-btn active" data-tab="shop">
-        <span>🛒</span> ซื้อของ
+        <span><svg viewBox="0 0 36 36" class="ui-svg"><path d="M6 6 L10 6 L14 23 L28 23 L31 11 L12 11" fill="none" stroke="#ff65a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="28" r="3" fill="#ff65a5"/><circle cx="26" cy="28" r="3" fill="#ff65a5"/></svg></span> ซื้อของ
       </button>
       <button type="button" class="tab-btn" data-tab="feed">
-        <span>🥕</span> ป้อนขนม
+        <span><svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg></span> ป้อนขนม
       </button>
       <button type="button" class="tab-btn" data-tab="roleplay">
         <span>💬</span> ชวนคุย
       </button>
       <button type="button" class="tab-btn" data-tab="moods">
-        <span>🥰</span> อารมณ์
+        <span>😊</span> อารมณ์
       </button>
     </div>
 
@@ -895,8 +1291,8 @@ h1 {
             <div class="cart-total" id="cartTotal">รวม: 0 บาท</div>
           </div>
           <div class="cart-actions">
-            <button type="button" class="btn-clear" id="clearCartBtn" title="เริ่มใหม่">🧺 ล้าง</button>
-            <button type="button" class="btn-pay" id="checkoutBtn">🪙 คิดเงิน</button>
+            <button type="button" class="btn-clear" id="clearCartBtn" title="เริ่มใหม่">🔄 ล้าง</button>
+            <button type="button" class="btn-pay" id="checkoutBtn">💰 คิดเงิน</button>
           </div>
         </div>
       </div>
@@ -919,7 +1315,7 @@ h1 {
       <!-- 4. MOODS PANEL -->
       <div class="tab-panel" id="panel-moods">
         <div class="moods-grid">
-          <button type="button" class="mood-card" data-mood="happy"><span>🥰</span>ดีใจ</button>
+          <button type="button" class="mood-card" data-mood="happy"><span>😄</span>ดีใจ</button>
           <button type="button" class="mood-card" data-mood="laugh"><span>😂</span>หัวเราะ</button>
           <button type="button" class="mood-card" data-mood="surprise"><span>😮</span>ตกใจ</button>
           <button type="button" class="mood-card" data-mood="sleepy"><span>😴</span>ง่วงนอน</button>
@@ -1131,10 +1527,16 @@ function updateConfetti() {
   }
 }
 
-function createFlyingEmoji(emoji, startX, startY, endX, endY, onComplete) {
+function createFlyingEmoji(content, startX, startY, endX, endY, onComplete) {
   const el = document.createElement('div');
   el.className = 'flying-particle';
-  el.textContent = emoji;
+  if (typeof content === 'string' && content.includes('<svg')) {
+    el.innerHTML = content;
+    const svg = el.querySelector('svg');
+    if (svg) { svg.style.width = '38px'; svg.style.height = '38px'; }
+  } else {
+    el.textContent = content;
+  }
   el.style.left = startX + 'px';
   el.style.top = startY + 'px';
   document.body.appendChild(el);
@@ -1160,6 +1562,8 @@ let voices = [];
 let currentAction = 1;
 let currentText = "ยินดีต้อนรับสู่ร้านน้องนิดาค่ะ 💕";
 let actionTimer = null;
+let mouthTimer = null;
+let currentCharMode = '3d'; // 'vector' or '3d'
 const voiceAvailable = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
 
 function loadVoices() {
@@ -1173,16 +1577,46 @@ if (voiceAvailable) {
 
 function startSpeakingState() {
   $('stage').classList.add('speaking');
+  // Animate mouth on vector character
+  const smile = $('smile');
+  const open = $('open');
+  if (smile && open) {
+    smile.style.display = 'none';
+    open.style.display = '';
+    clearInterval(mouthTimer);
+    mouthTimer = setInterval(() => {
+      const o = Math.random();
+      const mouthE = $('mouthE');
+      const tongue = $('tongue');
+      if (mouthE) {
+        mouthE.setAttribute('ry', 7 + o * 14);
+        mouthE.setAttribute('rx', 18 + (1 - o) * 8);
+      }
+      if (tongue) {
+        tongue.setAttribute('ry', 3 + o * 4);
+      }
+    }, 120);
+  }
 }
 
 function stopSpeakingState() {
   $('stage').classList.remove('speaking');
+  clearInterval(mouthTimer);
+  mouthTimer = null;
+  const smile = $('smile');
+  const open = $('open');
+  if (smile && open) {
+    open.style.display = 'none';
+    smile.style.display = '';
+  }
 }
 
 function stopAll() {
   clearTimeout(actionTimer);
   stopSpeakingState();
   $('stage').className = 'stage';
+  $('happyEyes').style.display = 'none';
+  $('sleepyEyes').style.display = 'none';
 }
 
 function speakText(text, pitch = 1.45, rate = 0.88, onDone = null) {
@@ -1233,17 +1667,63 @@ function speakText(text, pitch = 1.45, rate = 0.88, onDone = null) {
 }
 
 /* ============================================================
+   CHARACTER SWITCHER (Vector Animated <-> 3D Photo)
+   ============================================================ */
+function setCharacterMode(mode) {
+  currentCharMode = mode;
+  const viewVector = $('viewVector');
+  const view3D = $('view3D');
+  const btn = $('charToggleBtn');
+
+  if (mode === 'vector') {
+    viewVector.style.display = 'flex';
+    view3D.style.display = 'none';
+    btn.innerHTML = '🎨 น้องขยับได้';
+    btn.title = 'แตะเพื่อเปลี่ยนเป็นน้อง 3D';
+  } else {
+    viewVector.style.display = 'none';
+    view3D.style.display = 'flex';
+    btn.innerHTML = '🐰 น้อง 3D';
+    btn.title = 'แตะเพื่อเปลี่ยนเป็นน้องขยับได้';
+  }
+  try { localStorage.setItem('nida_char_mode', mode); } catch(e){}
+}
+
+$('charToggleBtn').addEventListener('click', () => {
+  SoundFX.boing();
+  const nextMode = currentCharMode === 'vector' ? '3d' : 'vector';
+  setCharacterMode(nextMode);
+  speakText(nextMode === 'vector' ? "นิดาพร้อมขยับตัวเล่นกับหนูแล้วค่ะ!" : "นี่คือรูปน้องนิดาแบบสามมิตินะคะ!");
+});
+
+// Restore saved preference
+try {
+  const saved = localStorage.getItem('nida_char_mode');
+  if (saved) setCharacterMode(saved);
+} catch(e){}
+
+/* ============================================================
+   SVG ICONS (Guaranteed to display on all Windows/Mobile versions)
+   ============================================================ */
+const ICONS = {
+  carrot: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg>`,
+  cart: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M6 6 L10 6 L14 23 L28 23 L31 11 L12 11" fill="none" stroke="#ff65a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="28" r="3" fill="#ff65a5"/><circle cx="26" cy="28" r="3" fill="#ff65a5"/></svg>`,
+  milk: `<svg viewBox="0 0 36 36" class="ui-svg"><path d="M13 13 L23 13 L21 4 L15 4 Z" fill="#90caf9"/><path d="M10 13 L26 13 L25 33 L11 33 Z" fill="#e3f2fd" stroke="#64b5f6" stroke-width="2"/><rect x="13" y="17" width="10" height="9" rx="2" fill="#bbdefb"/><text x="18" y="24" font-size="7" font-weight="900" text-anchor="middle" fill="#1976d2">MILK</text></svg>`,
+  bear: `<svg viewBox="0 0 36 36" class="ui-svg"><circle cx="10" cy="11" r="6" fill="#c68a4c"/><circle cx="10" cy="11" r="3" fill="#ffb8d2"/><circle cx="26" cy="11" r="6" fill="#c68a4c"/><circle cx="26" cy="11" r="3" fill="#ffb8d2"/><circle cx="18" cy="20" r="13" fill="#d49b5c"/><ellipse cx="18" cy="24" rx="6" ry="4.5" fill="#fff1d0"/><circle cx="18" cy="22" r="2" fill="#3e2723"/><circle cx="14" cy="18" r="2.2" fill="#3e2723"/><circle cx="22" cy="18" r="2.2" fill="#3e2723"/></svg>`
+};
+
+/* ============================================================
    4. SHOPPING & PRODUCTS
    ============================================================ */
 const PRODUCTS = [
-  { id: 'berry', name: 'สตรอว์เบอร์รี', emoji: '🍓', price: 5, talk: 'สตรอว์เบอร์รี หวานฉ่ำ อร่อยมากค่ะ!' },
-  { id: 'carrot', name: 'แครอทสด', emoji: '🥕', price: 2, talk: 'แครอทกรุบกรอบ ของโปรดกระต่ายเลย!' },
-  { id: 'icecream', name: 'ไอศกรีม', emoji: '🍦', price: 10, talk: 'ไอศกรีมหวานเย็น ชื่นใจที่สุดค่ะ!' },
-  { id: 'milk', name: 'นมสดกล่อง', emoji: '🥛', price: 10, talk: 'นมสดดื่มแล้วแข็งแรง ตัวโตไว ๆ นะคะ!' },
-  { id: 'cake', name: 'เค้กช็อกโกแลต', emoji: '🍰', price: 20, talk: 'เค้กชิ้นโต น่ากินมากเลยค่ะ!' },
-  { id: 'bear', name: 'ตุ๊กตาหมี', emoji: '🧸', price: 25, talk: 'น้องหมีนุ่มนิ่ม น่ารักจังเลย!' },
-  { id: 'apple', name: 'แอปเปิ้ล', emoji: '🍎', price: 5, talk: 'แอปเปิ้ลสีแดง สดใหม่จากสวนค่ะ!' },
-  { id: 'candy', name: 'อมยิ้ม', emoji: '🍭', price: 5, talk: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!' }
+  { id: 'berry', name: 'สตรอว์เบอร์รี', icon: '🍓', price: 5, talk: 'สตรอว์เบอร์รี หวานฉ่ำ อร่อยมากค่ะ!' },
+  { id: 'carrot', name: 'แครอทสด', icon: ICONS.carrot, price: 2, talk: 'แครอทกรุบกรอบ ของโปรดกระต่ายเลย!' },
+  { id: 'icecream', name: 'ไอศกรีม', icon: '🍦', price: 10, talk: 'ไอศกรีมหวานเย็น ชื่นใจที่สุดค่ะ!' },
+  { id: 'milk', name: 'นมสดกล่อง', icon: ICONS.milk, price: 10, talk: 'นมสดดื่มแล้วแข็งแรง ตัวโตไว ๆ นะคะ!' },
+  { id: 'cake', name: 'เค้กช็อกโกแลต', icon: '🍰', price: 20, talk: 'เค้กชิ้นโต น่ากินมากเลยค่ะ!' },
+  { id: 'bear', name: 'ตุ๊กตาหมี', icon: ICONS.bear, price: 25, talk: 'น้องหมีนุ่มนิ่ม น่ารักจังเลย!' },
+  { id: 'apple', name: 'แอปเปิ้ล', icon: '🍎', price: 5, talk: 'แอปเปิ้ลสีแดง สดใหม่จากสวนค่ะ!' },
+  { id: 'candy', name: 'อมยิ้ม', icon: '🍭', price: 5, talk: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!' }
 ];
 
 let cart = [];
@@ -1257,7 +1737,7 @@ function renderProducts() {
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.innerHTML = `
-      <div class="prod-emoji">${p.emoji}</div>
+      <div class="prod-emoji">${p.icon}</div>
       <div class="prod-name">${p.name}</div>
       <div class="prod-price">${p.price}฿</div>
     `;
@@ -1272,10 +1752,10 @@ function addToCart(product, event) {
   cart.push(product);
   updateCartDisplay();
 
-  // Flying emoji towards bunny
+  // Flying icon towards bunny
   const rect = event.currentTarget.getBoundingClientRect();
-  const targetRect = $('bunnyCard').getBoundingClientRect();
-  createFlyingEmoji(product.emoji, rect.left + rect.width / 2, rect.top, targetRect.left + targetRect.width / 2, targetRect.top + targetRect.height * 0.6);
+  const targetRect = $('stage').getBoundingClientRect();
+  createFlyingEmoji(product.icon, rect.left + rect.width / 2, rect.top, targetRect.left + targetRect.width / 2, targetRect.top + targetRect.height * 0.6);
 
   // Character reaction
   $('stage').className = 'stage act-2';
@@ -1333,12 +1813,12 @@ function clearCart() {
    5. FEEDING THE BUNNY
    ============================================================ */
 const TREATS = [
-  { name: 'แครอท', emoji: '🥕', talk: 'ง่ำ ๆๆๆ แครอทกรุบกรอบ อร่อยชื่นใจที่สุดเลย!' },
-  { name: 'สตรอว์เบอร์รี', emoji: '🍓', talk: 'ง่ำ ๆ หวานฉ่ำ สดชื่นมาก ขอบคุณนะคะหนู!' },
-  { name: 'เค้กหวาน', emoji: '🍰', talk: 'ว้าว เค้กนุ่มละมุนลิ้น ฟินที่สุดเลยค่ะ!' },
-  { name: 'ไอศกรีม', emoji: '🍦', talk: 'เย็นเจี๊ยบ หวานหอม อร่อยชื่นใจจัง!' },
-  { name: 'แอปเปิ้ล', emoji: '🍎', talk: 'กรุบกรอบ วิตามินซีเต็มเปี่ยมเลยค่ะ!' },
-  { name: 'คุกกี้', emoji: '🍪', talk: 'คุกกี้หอมเนยมาก ๆ ขอน้องนิดากินอีกชิ้นนะคะ!' }
+  { name: 'แครอท', icon: ICONS.carrot, talk: 'ง่ำ ๆๆๆ แครอทกรุบกรอบ อร่อยชื่นใจที่สุดเลย!' },
+  { name: 'สตรอว์เบอร์รี', icon: '🍓', talk: 'ง่ำ ๆ หวานฉ่ำ สดชื่นมาก ขอบคุณนะคะหนู!' },
+  { name: 'เค้กหวาน', icon: '🍰', talk: 'ว้าว เค้กนุ่มละมุนลิ้น ฟินที่สุดเลยค่ะ!' },
+  { name: 'ไอศกรีม', icon: '🍦', talk: 'เย็นเจี๊ยบ หวานหอม อร่อยชื่นใจจัง!' },
+  { name: 'แอปเปิ้ล', icon: '🍎', talk: 'กรุบกรอบ วิตามินซีเต็มเปี่ยมเลยค่ะ!' },
+  { name: 'คุกกี้', icon: '🍪', talk: 'คุกกี้หอมเนยมาก ๆ ขอน้องนิดากินอีกชิ้นนะคะ!' }
 ];
 
 function renderFeedShelf() {
@@ -1348,7 +1828,7 @@ function renderFeedShelf() {
     const item = document.createElement('div');
     item.className = 'feed-item';
     item.innerHTML = `
-      <div class="prod-emoji">${t.emoji}</div>
+      <div class="prod-emoji">${t.icon}</div>
       <span>ป้อน ${t.name}</span>
     `;
     item.addEventListener('click', (e) => feedBunny(t, e));
@@ -1363,9 +1843,10 @@ function feedBunny(treat, event) {
   const endX = mouthRect.left > 0 ? (mouthRect.left + mouthRect.width / 2) : (window.innerWidth * 0.22);
   const endY = mouthRect.top > 0 ? (mouthRect.top + mouthRect.height / 2) : (window.innerHeight * 0.25);
 
-  createFlyingEmoji(treat.emoji, rect.left + rect.width / 2, rect.top, endX, endY, () => {
+  createFlyingEmoji(treat.icon, rect.left + rect.width / 2, rect.top, endX, endY, () => {
     SoundFX.munch();
     $('stage').className = 'stage mood-eating';
+    startSpeakingState();
     launchConfetti(25);
     setTimeout(() => {
       speakText(treat.talk, 1.48, 0.88);
@@ -1551,10 +2032,10 @@ installBtn.addEventListener('click', async () => {
 function updateOnlineStatus() {
   const pill = $('offlinePill');
   if (navigator.onLine) {
-    pill.textContent = '🟢 ออนไลน์';
+    pill.innerHTML = '<span class="status-dot"></span> ออนไลน์';
     pill.style.borderColor = 'rgba(62, 201, 146, 0.4)';
   } else {
-    pill.textContent = '🟡 ออฟไลน์';
+    pill.innerHTML = '<span class="status-dot offline"></span> ออฟไลน์';
     pill.style.borderColor = 'rgba(255, 158, 44, 0.4)';
   }
 }
