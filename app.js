@@ -182,6 +182,82 @@ const SoundFX = {
       osc.start(ctx.currentTime + idx * 0.09);
       osc.stop(ctx.currentTime + idx * 0.09 + 0.7);
     });
+  },
+
+  // Barcode scanner laser beep: crisp double tone
+  scanLaser() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2400, ctx.currentTime);
+    osc.frequency.setValueAtTime(2900, ctx.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.12);
+  },
+
+  // Thermal receipt print: rhythmic ratcheting sound
+  printReceipt() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    for (let i = 0; i < 5; i++) {
+      const t = ctx.currentTime + i * 0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140 + i * 15, t);
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    }
+  },
+
+  // Cute cartoon sneeze
+  sneeze() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(320, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.28);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  },
+
+  // Happy bunny purr / hum
+  purr() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    [392, 440, 523.25].forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, ctx.currentTime + i * 0.08);
+      gain.gain.setValueAtTime(0.16, ctx.currentTime + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.08 + 0.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.08);
+      osc.stop(ctx.currentTime + i * 0.08 + 0.2);
+    });
   }
 };
 
@@ -527,9 +603,18 @@ function renderProducts() {
 
 function addToCart(product, event) {
   getAudioContext();
-  SoundFX.beep();
+  SoundFX.scanLaser();
   cart.push(product);
   updateCartDisplay();
+
+  // Barcode scanner laser visual on the card
+  const card = event.currentTarget;
+  if (card) {
+    card.classList.remove('scanned');
+    void card.offsetWidth;
+    card.classList.add('scanned');
+    setTimeout(() => card.classList.remove('scanned'), 350);
+  }
 
   // Flying icon towards bunny
   const rect = event.currentTarget.getBoundingClientRect();
@@ -578,6 +663,33 @@ function checkout() {
   speakText(`รวม ${total} บาทค่ะ หนูจ่ายเงินเท่าไหร่คะ`);
 }
 
+function showReceipt(items, total, change) {
+  const meta = $('receiptMeta');
+  const now = new Date();
+  const dStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  if (meta) meta.textContent = 'เวลา: ' + dStr;
+
+  const box = $('receiptItems');
+  if (box) {
+    box.innerHTML = '';
+    items.forEach(it => {
+      const row = document.createElement('div');
+      row.className = 'receipt-line';
+      row.innerHTML = `<span>${it.name}</span><span>${it.price}฿</span>`;
+      box.appendChild(row);
+    });
+  }
+
+  const tEl = $('receiptTotal');
+  if (tEl) tEl.textContent = `ยอดรวม: ${total} บาท` + (change > 0 ? ` (ทอน ${change}฿)` : '');
+
+  const sEl = $('receiptStars');
+  if (sEl) sEl.textContent = `⭐ ดาวสะสม: ${stars} ดวง ⭐`;
+
+  SoundFX.printReceipt();
+  $('receiptOverlay').classList.add('show');
+}
+
 function finishCheckout(total, change) {
   getAudioContext();
   SoundFX.cashRegister();
@@ -587,9 +699,13 @@ function finishCheckout(total, change) {
   try { localStorage.setItem('nida_stars', String(stars)); } catch(e){}
   renderStars();
 
+  // Unlock a sticker for completing checkout!
+  unlockRandomSticker();
+
   $('stage').className = 'stage act-3';
   $('tag').classList.add('show');
 
+  const boughtItems = [...cart];
   const changeTxt = change > 0 ? ` ทอนเงิน ${change} บาทค่ะ` : ' จ่ายพอดีเลยค่ะ เก่งมาก';
   const praises = [
     `คิดเงินเรียบร้อย รวม ${total} บาท${changeTxt} ขอบคุณลูกค้าน่ารักนะคะ!`,
@@ -604,6 +720,7 @@ function finishCheckout(total, change) {
   speakText(msg, 1.4, 0.86, () => {
     cart = [];
     updateCartDisplay();
+    setTimeout(() => showReceipt(boughtItems, total, change), 350);
   });
 }
 
@@ -905,6 +1022,35 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     const panel = $('panel-' + btn.dataset.tab);
     if (panel) panel.classList.add('active');
   });
+});
+
+$('bunnyHead').addEventListener('click', (e) => {
+  e.stopPropagation();
+  getAudioContext();
+  SoundFX.purr();
+  $('stage').className = 'stage mood-purr';
+  const earL = $('rigEarL'), earR = $('rigEarR');
+  if (earL && earR) {
+    earL.style.transform = 'rotate(-12deg)';
+    earR.style.transform = 'rotate(12deg)';
+    setTimeout(() => { earL.style.transform = ''; earR.style.transform = ''; }, 1200);
+  }
+  const lines = [
+    "อื้มมม ลูบหัวแล้วสบายจังเลยค่ะ เคลิ้มเลย",
+    "งืมมม รักหนูที่สุดเลย ลูบหัวน้องนิดาอีกนะคะ",
+    "น้องนิดาชอบให้ลูบหัวที่สุดเลยค่ะ มีความสุขจัง"
+  ];
+  speakText(lines[Math.floor(Math.random() * lines.length)], 1.5, 0.88);
+});
+
+$('bunnyNose').addEventListener('click', (e) => {
+  e.stopPropagation();
+  getAudioContext();
+  SoundFX.sneeze();
+  $('stage').className = 'stage mood-sneeze';
+  launchConfetti(25);
+  speakText("ฮัดเช้ยยย! จมูกคันจังเลยค่ะหนู 💨", 1.6, 0.95);
+  setTimeout(() => { $('stage').className = 'stage'; }, 1000);
 });
 
 $('bunnyTummy').addEventListener('click', (e) => {
@@ -1337,10 +1483,186 @@ function startCounting() {
   })();
 }
 
+/* ---- Receipt Rip & Close ---- */
+const ripBtn = $('receiptCloseBtn');
+if (ripBtn) {
+  ripBtn.addEventListener('click', () => {
+    SoundFX.boing();
+    const paper = $('receiptPaper');
+    if (paper) {
+      paper.style.transform = 'translateY(120px) rotate(8deg)';
+      paper.style.opacity = '0';
+      paper.style.transition = 'all 0.35s ease-in';
+      setTimeout(() => {
+        $('receiptOverlay').classList.remove('show');
+        paper.style.transform = '';
+        paper.style.opacity = '';
+        paper.style.transition = '';
+      }, 360);
+    } else {
+      $('receiptOverlay').classList.remove('show');
+    }
+  });
+}
+$('receiptOverlay').addEventListener('click', (e) => {
+  if (e.target === $('receiptOverlay')) $('receiptOverlay').classList.remove('show');
+});
+
+/* ============================================================
+   STICKER ALBUM SYSTEM
+   ============================================================ */
+const STICKER_LIST = [
+  { id: 'star_gold', icon: '⭐', name: 'ดาวทอง' },
+  { id: 'crown', icon: '👑', name: 'มงกุฎ' },
+  { id: 'rainbow', icon: '🌈', name: 'สายรุ้ง' },
+  { id: 'heart', icon: '💖', name: 'หัวใจหวาน' },
+  { id: 'trophy', icon: '🏆', name: 'ถ้วยรางวัล' },
+  { id: 'unicorn', icon: '🦄', name: 'ยูนิคอร์น' },
+  { id: 'candy', icon: '🍭', name: 'อมยิ้ม' },
+  { id: 'cake', icon: '🎂', name: 'เค้กวันเกิด' },
+  { id: 'flower', icon: '🌸', name: 'ดอกไม้หอม' },
+  { id: 'balloon', icon: '🎈', name: 'ลูกโป่งแดง' },
+  { id: 'sparkles', icon: '✨', name: 'ประกายดาว' },
+  { id: 'gem', icon: '💎', name: 'เพชรวิบวับ' }
+];
+
+let myStickers = {};
+try { myStickers = JSON.parse(localStorage.getItem('nida_stickers') || '{}') || {}; } catch(e){}
+
+function renderStickerAlbum() {
+  const album = $('stickerAlbum');
+  if (!album) return;
+  album.innerHTML = '';
+  STICKER_LIST.forEach((s) => {
+    const slot = document.createElement('div');
+    const unlocked = !!myStickers[s.id];
+    slot.className = 'sticker-slot ' + (unlocked ? 'unlocked' : 'locked');
+    slot.innerHTML = `<span>${s.icon}</span><span class="sticker-slot-name">${unlocked ? s.name : '???'}</span>`;
+    slot.addEventListener('click', () => {
+      getAudioContext();
+      if (unlocked) {
+        SoundFX.boing();
+        launchConfetti(20);
+        speakText(`สติกเกอร์${s.name} น่ารักจังเลยค่ะ`);
+      } else {
+        SoundFX.boing();
+        speakText(`สติกเกอร์นี้ยังล็อคอยู่ค่ะ ช่วยขายของหรือหมุนไข่เพื่อปลดล็อคนะคะ`);
+      }
+    });
+    album.appendChild(slot);
+  });
+}
+
+function unlockRandomSticker() {
+  const locked = STICKER_LIST.filter(s => !myStickers[s.id]);
+  if (locked.length === 0) return null;
+  const picked = locked[Math.floor(Math.random() * locked.length)];
+  myStickers[picked.id] = true;
+  try { localStorage.setItem('nida_stickers', JSON.stringify(myStickers)); } catch(e){}
+  return picked;
+}
+
+function openStickerBook() {
+  getAudioContext();
+  SoundFX.boing();
+  renderStickerAlbum();
+  $('stickerOverlay').classList.add('show');
+  speakText("นี่คือสมุดสติกเกอร์คนเก่งของน้องนิดาค่ะ สะสมให้ครบนะคะ!");
+}
+
+$('stickerClose').addEventListener('click', () => $('stickerOverlay').classList.remove('show'));
+$('stickerOverlay').addEventListener('click', (e) => { if (e.target === $('stickerOverlay')) $('stickerOverlay').classList.remove('show'); });
+$('stickerClearBtn').addEventListener('click', () => {
+  myStickers = {};
+  try { localStorage.removeItem('nida_stickers'); } catch(e){}
+  renderStickerAlbum();
+  SoundFX.boing();
+  speakText("เริ่มเก็บสติกเกอร์ใหม่แล้วค่ะ สู้ ๆ นะคะ!");
+});
+
+/* ============================================================
+   GACHAPON SYSTEM
+   ============================================================ */
+let gachaSpinning = false;
+const GACHA_PRIZES = [
+  { text: "สติกเกอร์ถ้วยรางวัลคนเก่ง 🏆", type: 'sticker', id: 'trophy' },
+  { text: "สติกเกอร์ยูนิคอร์นสายรุ้ง 🦄", type: 'sticker', id: 'unicorn' },
+  { text: "สติกเกอร์เพชรวิบวับ 💎", type: 'sticker', id: 'gem' },
+  { text: "มงกุฎเจ้าหญิงสุดสวย 👑", type: 'acc', key: 'Crown' },
+  { text: "ปีกนางฟ้าบินได้ 🧚", type: 'acc', key: 'Wings' },
+  { text: "ไม้กายสิทธิ์เสกเวทมนตร์ ✨", type: 'acc', key: 'Wand' }
+];
+
+function openGachapon() {
+  getAudioContext();
+  SoundFX.boing();
+  $('gachaPrizeZone').style.display = 'none';
+  $('gachaMachine').style.display = 'flex';
+  $('gachaHint').textContent = 'แตะที่ปุ่มเพื่อหมุนไข่ลุ้นของขวัญ ✨';
+  $('gachaOverlay').classList.add('show');
+  speakText("ตู้หมุนไข่ของน้องนิดาค่ะ มาหมุนลุ้นของเล่นกันเลย!");
+}
+
+function turnGachapon() {
+  if (gachaSpinning) return;
+  gachaSpinning = true;
+  getAudioContext();
+  SoundFX.boing();
+  setTimeout(SoundFX.purr, 150);
+
+  const machine = $('gachaMachine');
+  machine.classList.add('spinning');
+  $('gachaHint').textContent = 'ตู้ไข่กำลังหมุน กริ๊ก กริ๊ก กริ๊ก... 🌀';
+
+  setTimeout(() => {
+    machine.classList.remove('spinning');
+    machine.style.display = 'none';
+    const prizeZone = $('gachaPrizeZone');
+    prizeZone.style.display = 'block';
+
+    // Pick prize
+    const p = GACHA_PRIZES[Math.floor(Math.random() * GACHA_PRIZES.length)];
+    $('gachaPrizeText').textContent = p.text;
+    if (p.type === 'sticker') {
+      myStickers[p.id] = true;
+      try { localStorage.setItem('nida_stickers', JSON.stringify(myStickers)); } catch(e){}
+    } else if (p.type === 'acc') {
+      outfit[p.key] = true;
+      applyOutfit();
+    }
+    stars++;
+    try { localStorage.setItem('nida_stars', String(stars)); } catch(e){}
+    renderStars();
+
+    SoundFX.fanfare();
+    launchConfetti(65);
+    speakText(`เย้! ได้ ${p.text} ค่ะ เก่งที่สุดเลย!`);
+    $('gachaHint').textContent = 'แตะที่ปุ่มเพื่อหมุนใหม่อีกรอบได้เลยนะคะ ✨';
+    gachaSpinning = false;
+  }, 1100);
+}
+
+$('gachaTurnBtn').addEventListener('click', turnGachapon);
+$('gachaEggAnim').addEventListener('click', () => {
+  SoundFX.boing();
+  launchConfetti(25);
+});
+$('gachaClose').addEventListener('click', () => $('gachaOverlay').classList.remove('show'));
+$('gachaOverlay').addEventListener('click', (e) => { if (e.target === $('gachaOverlay')) $('gachaOverlay').classList.remove('show'); });
+
 /* ---- wire up ---- */
 buildPiano();
 setScene(currentScene);
-const FUN_ACTIONS = { balloons: startBalloons, piano: openPiano, birthday: openBirthday, photo: takePhoto, scene: nextScene, count: startCounting };
+const FUN_ACTIONS = {
+  balloons: startBalloons,
+  piano: openPiano,
+  birthday: openBirthday,
+  gachapon: openGachapon,
+  stickers: openStickerBook,
+  photo: takePhoto,
+  scene: nextScene,
+  count: startCounting
+};
 document.querySelectorAll('[data-fun]').forEach(b => {
   b.addEventListener('click', () => { getAudioContext(); const f = FUN_ACTIONS[b.dataset.fun]; if (f) f(); });
 });

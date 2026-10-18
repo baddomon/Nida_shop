@@ -153,7 +153,9 @@
         </div>
       </div>
 
-      <!-- Invisible Tummy Touch Zone & Mouth Target (Both Characters) -->
+      <!-- Invisible Touch Zones (Both Characters) -->
+      <div id="bunnyHead" title="ลูบหัวน้องนิดา"></div>
+      <div id="bunnyNose" title="จิ้มจมูกน้องนิดา"></div>
       <div id="bunnyTummy" title="จั๊กจี้พุงน้องนิดา"></div>
       <div id="mouthTarget"></div>
 
@@ -261,6 +263,8 @@
           <button type="button" class="mood-card" data-fun="balloons"><span>🎈</span>ลูกโป่ง</button>
           <button type="button" class="mood-card" data-fun="piano"><span>🎹</span>เปียโน</button>
           <button type="button" class="mood-card" data-fun="birthday"><span>🎂</span>วันเกิด</button>
+          <button type="button" class="mood-card" data-fun="gachapon"><span>🎁</span>หมุนไข่</button>
+          <button type="button" class="mood-card" data-fun="stickers"><span>🌟</span>สมุดสติกเกอร์</button>
           <button type="button" class="mood-card" data-fun="photo"><span>📸</span>ถ่ายรูป</button>
           <button type="button" class="mood-card" data-fun="scene"><span id="sceneIcon">🌈</span>เปลี่ยนฉาก</button>
           <button type="button" class="mood-card" data-fun="count"><span>🔢</span>นับเลข</button>
@@ -310,6 +314,72 @@
 </div>
 
 <div id="balloonLayer" aria-hidden="true"></div>
+
+<!-- Receipt Modal Overlay -->
+<div class="receipt-overlay" id="receiptOverlay">
+  <div class="receipt-paper" id="receiptPaper">
+    <div class="receipt-zigzag-top"></div>
+    <div class="receipt-body">
+      <div class="receipt-shop-name">🐰 ร้านน้องนิดา 🐰</div>
+      <div class="receipt-tagline">✨ ใบเสร็จรับเงินสุดน่ารัก ✨</div>
+      <div class="receipt-divider">-----------------------------</div>
+      <div class="receipt-meta" id="receiptMeta">วันที่: --/--/----</div>
+      <div class="receipt-divider">-----------------------------</div>
+      <div class="receipt-items" id="receiptItems"></div>
+      <div class="receipt-divider">-----------------------------</div>
+      <div class="receipt-total" id="receiptTotal">ยอดรวม: 0 บาท</div>
+      <div class="receipt-stars" id="receiptStars">⭐ ดาวสะสม: 0 ดวง ⭐</div>
+      <div class="receipt-barcode">
+        <div class="receipt-bars">||| | |||| | ||| |||| | ||</div>
+        <small>* ขอบคุณลูกค้าน่ารักนะคะ *</small>
+      </div>
+    </div>
+    <div class="receipt-zigzag-bottom"></div>
+    <div class="receipt-actions">
+      <button type="button" class="receipt-rip-btn" id="receiptCloseBtn">✂️ ฉีกใบเสร็จ / ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- Gachapon Machine Overlay -->
+<div class="gacha-overlay" id="gachaOverlay">
+  <div class="gacha-box">
+    <button type="button" class="ov-close" id="gachaClose" aria-label="ปิด">✕</button>
+    <div class="gacha-title">🎁 ตู้หมุนไข่เซอร์ไพรส์ 🎁</div>
+    <div class="gacha-machine" id="gachaMachine">
+      <div class="gacha-dome" id="gachaDome">
+        <div class="gacha-ball b-red"></div>
+        <div class="gacha-ball b-blue"></div>
+        <div class="gacha-ball b-yellow"></div>
+        <div class="gacha-ball b-green"></div>
+        <div class="gacha-ball b-purple"></div>
+      </div>
+      <button type="button" class="gacha-turn-knob" id="gachaTurnBtn">
+        <span>🔄</span> หมุนตู้ไข่!
+      </button>
+    </div>
+    <div class="gacha-prize-zone" id="gachaPrizeZone" style="display:none;">
+      <div class="gacha-egg-anim" id="gachaEggAnim">🥚</div>
+      <div class="gacha-prize-text" id="gachaPrizeText">ว้าว! ได้ของเล่นใหม่</div>
+    </div>
+    <div class="gacha-hint" id="gachaHint">แตะที่ปุ่มเพื่อหมุนไข่ลุ้นของขวัญ ✨</div>
+  </div>
+</div>
+
+<!-- Sticker Book Overlay -->
+<div class="sticker-overlay" id="stickerOverlay">
+  <div class="sticker-box">
+    <button type="button" class="ov-close" id="stickerClose" aria-label="ปิด">✕</button>
+    <div class="sticker-title">🌟 สมุดสติกเกอร์คนเก่ง 🌟</div>
+    <div class="sticker-subtitle">ของน้องนิดา (แตะสติกเกอร์เพื่อสะสมลงสมุด)</div>
+    <div class="sticker-album" id="stickerAlbum">
+      <!-- 12 slots -->
+    </div>
+    <div class="sticker-bottom-bar">
+      <button type="button" class="pill-btn" id="stickerClearBtn">🔄 เริ่มเก็บใหม่</button>
+    </div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
