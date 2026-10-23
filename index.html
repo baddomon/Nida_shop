@@ -207,13 +207,34 @@
     <div class="tab-content-area">
       <!-- 1. SHOP PANEL -->
       <div class="tab-panel active" id="panel-shop">
+        <!-- Bunny Shopping Quest Card -->
+        <div class="quest-box" id="questBox">
+          <div class="quest-head">
+            <span class="quest-badge">🎯 ภารกิจน้องกระต่าย</span>
+            <button type="button" class="quest-reroll-btn" id="questRerollBtn" title="ขอภารกิจใหม่">🎲 สุ่มใหม่</button>
+          </div>
+          <div class="quest-content">
+            <div class="quest-speech" id="questSpeech">ช่วยหาของใส่ตะกร้าให้หน่อยนะคะหนู:</div>
+            <div class="quest-items" id="questItems"></div>
+          </div>
+        </div>
+
+        <!-- Shop Category Filter Chips -->
+        <div class="shop-cats" id="shopCats" role="tablist" aria-label="หมวดหมู่สินค้า">
+          <button type="button" class="shop-cat-btn active" data-cat="all">🌟 ทั้งหมด</button>
+          <button type="button" class="shop-cat-btn" data-cat="fresh">🥦 ผักผลไม้</button>
+          <button type="button" class="shop-cat-btn" data-cat="bakery">🧁 เบเกอรี่</button>
+          <button type="button" class="shop-cat-btn" data-cat="sweet">🍭 ขนมหวาน</button>
+        </div>
+
         <div class="products-grid" id="productShelf"></div>
         <div class="cart-bar">
-          <div class="cart-info">
-            <div class="cart-count" id="cartCount">ตะกร้า: 0 ชิ้น</div>
+          <div class="cart-info" id="cartInfoBtn" role="button" tabindex="0" title="แตะเพื่อเปิดดูของในตะกร้า">
+            <div class="cart-count" id="cartCount">ตะกร้า: 0 ชิ้น 🔍</div>
             <div class="cart-total" id="cartTotal">รวม: 0 บาท</div>
           </div>
           <div class="cart-actions">
+            <button type="button" class="btn-scale" id="openScaleBtn" title="ชั่งน้ำหนักผลไม้">⚖️ ตาชั่ง</button>
             <button type="button" class="btn-clear" id="clearCartBtn" title="เริ่มใหม่">🔄 ล้าง</button>
             <button type="button" class="btn-pay" id="checkoutBtn">💰 คิดเงิน</button>
           </div>
@@ -279,11 +300,72 @@
 
 </div>
 
-<!-- Payment overlay (change calculation) -->
+<!-- Payment overlay: Cash Register Drawer (ลิ้นชักแคชเชียร์) -->
 <div class="pay-overlay" id="payOverlay">
-  <div class="pay-box">
-    <div class="pay-title" id="payTitle"></div>
-    <div class="pay-choices" id="payChoices"></div>
+  <div class="cash-drawer-box" id="cashDrawerBox">
+    <button type="button" class="ov-close" id="payClose" aria-label="ปิด">✕</button>
+    <div class="drawer-header">
+      <div class="drawer-bell-icon">🔔</div>
+      <div class="drawer-title" id="payTitle">รวม 0 บาท หนูจ่ายเงินเท่าไหร่คะ?</div>
+    </div>
+    <div class="drawer-sub">แตะเลือกธนบัตรหรือเหรียญที่ต้องการจ่ายนะคะ</div>
+    <div class="drawer-body">
+      <div class="drawer-section-title">💵 ธนบัตร</div>
+      <div class="drawer-bills" id="drawerBills"></div>
+      <div class="drawer-section-title">🪙 เหรียญ</div>
+      <div class="drawer-coins" id="drawerCoins"></div>
+    </div>
+    <div class="drawer-footer-hint" id="drawerHint">แตะที่เงินเพื่อชำระเงินได้เลยค่ะ ✨</div>
+  </div>
+</div>
+
+<!-- Shopping Basket Manager Modal (เปิดดูของในตะกร้า & ลบออก) -->
+<div class="basket-overlay" id="basketOverlay">
+  <div class="basket-box">
+    <button type="button" class="ov-close" id="basketClose" aria-label="ปิด">✕</button>
+    <div class="basket-title">🛒 ตะกร้าของน้องนิดา 🛒</div>
+    <div class="basket-subtitle" id="basketSubtitle">มีสินค้าทั้งหมด 0 ชิ้น</div>
+    <div class="basket-items" id="basketItems"></div>
+    <div class="basket-summary">
+      <div class="basket-total" id="basketTotal">รวม: 0 บาท</div>
+      <div class="basket-actions">
+        <button type="button" class="btn-clear" id="basketClearBtn">🔄 ล้างตะกร้า</button>
+        <button type="button" class="btn-pay" id="basketPayBtn">💰 ไปคิดเงินเลย</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Digital Toy Scale Modal (เครื่องชั่งน้ำหนักผักผลไม้ดิจิทัล) -->
+<div class="scale-overlay" id="scaleOverlay">
+  <div class="scale-box">
+    <button type="button" class="ov-close" id="scaleClose" aria-label="ปิด">✕</button>
+    <div class="scale-title">⚖️ เครื่องชั่งน้ำหนักผลไม้ดิจิทัล ⚖️</div>
+    <div class="scale-hint" id="scaleHint">แตะเลือกผลไม้ด้านล่างเพื่อวางบนตาชั่งค่ะ</div>
+    
+    <div class="scale-machine">
+      <div class="scale-pan" id="scalePan">
+        <div class="scale-item-placed" id="scaleItemPlaced">
+          <span class="scale-empty-icon">🥦</span>
+        </div>
+      </div>
+      <div class="scale-pillar"></div>
+      <div class="scale-base">
+        <div class="scale-screen">
+          <div class="scale-digits" id="scaleWeight">0.00 kg</div>
+          <div class="scale-price" id="scalePrice">0 ฿</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scale-section-title">แตะเลือกผลไม้ที่ต้องการชั่ง:</div>
+    <div class="scale-fruits" id="scaleFruits"></div>
+
+    <div class="scale-actions">
+      <button type="button" class="scale-add-btn" id="scaleAddBtn" disabled>
+        🏷️ พิมพ์ป้ายราคา & ใส่ตะกร้า!
+      </button>
+    </div>
   </div>
 </div>
 

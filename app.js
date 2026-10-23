@@ -258,6 +258,57 @@ const SoundFX = {
       osc.start(ctx.currentTime + i * 0.08);
       osc.stop(ctx.currentTime + i * 0.08 + 0.2);
     });
+  },
+
+  // Toy cash drawer release bell: rich metallic DING and drawer rolling
+  cashDrawer() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1760, ctx.currentTime);
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.65);
+
+    setTimeout(() => {
+      if (!ctx) return;
+      const o2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      o2.type = 'triangle';
+      o2.frequency.setValueAtTime(220, ctx.currentTime);
+      o2.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.12);
+      g2.gain.setValueAtTime(0.2, ctx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+      o2.connect(g2);
+      g2.connect(ctx.destination);
+      o2.start();
+      o2.stop(ctx.currentTime + 0.12);
+    }, 60);
+  },
+
+  // Digital scale settling beep: double electronic beep
+  scaleBeep() {
+    if (!soundEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    [0, 0.08].forEach(dt => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1900, ctx.currentTime + dt);
+      gain.gain.setValueAtTime(0.22, ctx.currentTime + dt);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dt + 0.05);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + dt);
+      osc.stop(ctx.currentTime + dt + 0.05);
+    });
   }
 };
 
@@ -567,26 +618,50 @@ const ICONS = {
    4. SHOPPING & PRODUCTS
    ============================================================ */
 const PRODUCTS = [
-  { id: 'berry', name: 'สตรอว์เบอร์รี', icon: '🍓', price: 5, talk: 'สตรอว์เบอร์รี หวานฉ่ำ อร่อยมากค่ะ!' },
-  { id: 'carrot', name: 'แครอทสด', icon: ICONS.carrot, price: 2, talk: 'แครอทกรุบกรอบ ของโปรดกระต่ายเลย!' },
-  { id: 'icecream', name: 'ไอศกรีม', icon: '🍦', price: 10, talk: 'ไอศกรีมหวานเย็น ชื่นใจที่สุดค่ะ!' },
-  { id: 'milk', name: 'นมสดกล่อง', icon: ICONS.milk, price: 10, talk: 'นมสดดื่มแล้วแข็งแรง ตัวโตไว ๆ นะคะ!' },
-  { id: 'cake', name: 'เค้กช็อกโกแลต', icon: '🍰', price: 20, talk: 'เค้กชิ้นโต น่ากินมากเลยค่ะ!' },
-  { id: 'bear', name: 'ตุ๊กตาหมี', icon: ICONS.bear, price: 25, talk: 'น้องหมีนุ่มนิ่ม น่ารักจังเลย!' },
-  { id: 'apple', name: 'แอปเปิ้ล', icon: '🍎', price: 5, talk: 'แอปเปิ้ลสีแดง สดใหม่จากสวนค่ะ!' },
-  { id: 'candy', name: 'อมยิ้ม', icon: '🍭', price: 5, talk: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!' },
-  { id: 'banana', name: 'กล้วยหอม', icon: '🍌', price: 3, talk: 'กล้วยหอมหวาน ให้พลังงานเยอะเลยค่ะ!' },
-  { id: 'cookie', name: 'คุกกี้', icon: '🍪', price: 8, talk: 'คุกกี้กรอบ ๆ หอมเนยเลยค่ะ!' },
-  { id: 'cupcake', name: 'คัพเค้ก', icon: ICONS.cupcake, price: 12, talk: 'คัพเค้กหน้าสวย หวานอร่อยค่ะ!' },
-  { id: 'donut', name: 'โดนัท', icon: '🍩', price: 15, talk: 'โดนัทหน้าช็อกโกแลต นุ่มฟูเลยค่ะ!' }
+  // 🥦 ผักผลไม้ (fresh)
+  { id: 'berry', cat: 'fresh', name: 'สตรอว์เบอร์รี', icon: '🍓', price: 5, talk: 'สตรอว์เบอร์รี หวานฉ่ำ อร่อยมากค่ะ!' },
+  { id: 'carrot', cat: 'fresh', name: 'แครอทสด', icon: ICONS.carrot, price: 2, talk: 'แครอทกรุบกรอบ ของโปรดกระต่ายเลย!' },
+  { id: 'apple', cat: 'fresh', name: 'แอปเปิ้ล', icon: '🍎', price: 5, talk: 'แอปเปิ้ลสีแดง สดใหม่จากสวนค่ะ!' },
+  { id: 'banana', cat: 'fresh', name: 'กล้วยหอม', icon: '🍌', price: 3, talk: 'กล้วยหอมหวาน ให้พลังงานเยอะเลยค่ะ!' },
+  { id: 'orange', cat: 'fresh', name: 'ส้มหวาน', icon: '🍊', price: 4, talk: 'ส้มสีส้ม หวานอมเปรี้ยว สดชื่นจังค่ะ!' },
+  { id: 'watermelon', cat: 'fresh', name: 'แตงโม', icon: '🍉', price: 8, talk: 'แตงโมเย็นฉ่ำ ชื่นใจที่สุดเลยค่ะ!' },
+
+  // 🧁 เบเกอรี่ (bakery)
+  { id: 'cake', cat: 'bakery', name: 'เค้กช็อกโกแลต', icon: '🍰', price: 20, talk: 'เค้กชิ้นโต น่ากินมากเลยค่ะ!' },
+  { id: 'cookie', cat: 'bakery', name: 'คุกกี้', icon: '🍪', price: 8, talk: 'คุกกี้กรอบ ๆ หอมเนยเลยค่ะ!' },
+  { id: 'cupcake', cat: 'bakery', name: 'คัพเค้ก', icon: ICONS.cupcake, price: 12, talk: 'คัพเค้กหน้าสวย หวานอร่อยค่ะ!' },
+  { id: 'donut', cat: 'bakery', name: 'โดนัท', icon: '🍩', price: 15, talk: 'โดนัทหน้าช็อกโกแลต นุ่มฟูเลยค่ะ!' },
+  { id: 'bread', cat: 'bakery', name: 'ขนมปังปิ้ง', icon: '🍞', price: 6, talk: 'ขนมปังหอมกรุ่น นุ่มฟูมากค่ะ!' },
+
+  // 🍭 ขนมหวาน & เครื่องดื่ม (sweet)
+  { id: 'icecream', cat: 'sweet', name: 'ไอศกรีม', icon: '🍦', price: 10, talk: 'ไอศกรีมหวานเย็น ชื่นใจที่สุดค่ะ!' },
+  { id: 'milk', cat: 'sweet', name: 'นมสดกล่อง', icon: ICONS.milk, price: 10, talk: 'นมสดดื่มแล้วแข็งแรง ตัวโตไว ๆ นะคะ!' },
+  { id: 'candy', cat: 'sweet', name: 'อมยิ้ม', icon: '🍭', price: 5, talk: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!' },
+  { id: 'pudding', cat: 'sweet', name: 'พุดดิ้ง', icon: '🍮', price: 14, talk: 'พุดดิ้งดึ๋งดั๋ง หวานละมุนลิ้นค่ะ!' },
+  { id: 'chocolate', cat: 'sweet', name: 'ช็อกโกแลต', icon: '🍫', price: 12, talk: 'ช็อกโกแลตเข้มข้น อร่อยติดใจเลยค่ะ!' },
+  { id: 'bear', cat: 'sweet', name: 'ตุ๊กตาหมี', icon: ICONS.bear, price: 25, talk: 'น้องหมีนุ่มนิ่ม น่ารักจังเลย!' }
 ];
 
 let cart = [];
+let currentShopCat = 'all';
+
+function setShopCat(cat) {
+  currentShopCat = cat;
+  document.querySelectorAll('.shop-cat-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === cat);
+  });
+  renderProducts();
+}
 
 function renderProducts() {
   const shelf = $('productShelf');
+  if (!shelf) return;
   shelf.innerHTML = '';
-  PRODUCTS.forEach(p => {
+  const filtered = currentShopCat === 'all' 
+    ? PRODUCTS 
+    : PRODUCTS.filter(p => p.cat === currentShopCat);
+
+  filtered.forEach(p => {
     const card = document.createElement('div');
     card.className = 'prod-card';
     card.setAttribute('role', 'button');
@@ -601,14 +676,71 @@ function renderProducts() {
   });
 }
 
+/* ---- Shopping Quest System ---- */
+let currentQuest = null;
+
+function newQuest() {
+  const pool = PRODUCTS.filter(p => p.id !== 'bear');
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  currentQuest = {
+    items: shuffled.slice(0, 2),
+    completed: false
+  };
+  renderQuest();
+}
+
+function renderQuest() {
+  const box = $('questBox');
+  const speech = $('questSpeech');
+  const itemsBox = $('questItems');
+  if (!box || !speech || !itemsBox || !currentQuest) return;
+
+  const names = currentQuest.items.map(it => it.name).join(' กับ ');
+  speech.innerHTML = `ช่วยหยิบ <b>${names}</b> ใส่ตะกร้าหน่อยนะคะหนู:`;
+
+  itemsBox.innerHTML = '';
+  currentQuest.items.forEach(it => {
+    const inCart = cart.some(c => c.id === it.id);
+    const chip = document.createElement('span');
+    chip.className = 'quest-chip' + (inCart ? ' found' : '');
+    chip.innerHTML = `${it.icon} ${it.name} ${inCart ? '✓' : ''}`;
+    itemsBox.appendChild(chip);
+  });
+}
+
+function checkQuest() {
+  if (!currentQuest || currentQuest.completed) return;
+  const targetIds = currentQuest.items.map(it => it.id);
+  const cartIds = cart.map(c => c.id);
+  const allFound = targetIds.every(id => cartIds.includes(id));
+  renderQuest();
+
+  if (allFound) {
+    currentQuest.completed = true;
+    stars += 2;
+    try { localStorage.setItem('nida_stars', String(stars)); } catch(e){}
+    renderStars();
+    SoundFX.fanfare();
+    launchConfetti(50);
+    $('questBox').classList.add('quest-done');
+    $('questSpeech').innerHTML = '🎉 <b>ภารกิจสำเร็จแล้ว!</b> ได้ของครบแล้ว ได้ดาวพิเศษ +2 ดวง ⭐⭐';
+    speakText("ว้าววว! ได้ของครบตามที่อยากได้แล้ว น้องนิดาเก่งที่สุดเลยค่ะ ได้ดาวพิเศษเพิ่มสองดวงเลย!");
+    setTimeout(() => {
+      $('questBox').classList.remove('quest-done');
+      newQuest();
+    }, 4500);
+  }
+}
+
 function addToCart(product, event) {
   getAudioContext();
   SoundFX.scanLaser();
   cart.push(product);
   updateCartDisplay();
+  checkQuest();
 
   // Barcode scanner laser visual on the card
-  const card = event.currentTarget;
+  const card = event ? event.currentTarget : null;
   if (card) {
     card.classList.remove('scanned');
     void card.offsetWidth;
@@ -617,9 +749,11 @@ function addToCart(product, event) {
   }
 
   // Flying icon towards bunny
-  const rect = event.currentTarget.getBoundingClientRect();
-  const targetRect = $('stage').getBoundingClientRect();
-  createFlyingEmoji(product.icon, rect.left + rect.width / 2, rect.top, targetRect.left + targetRect.width / 2, targetRect.top + targetRect.height * 0.6);
+  if (event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const targetRect = $('stage').getBoundingClientRect();
+    createFlyingEmoji(product.icon, rect.left + rect.width / 2, rect.top, targetRect.left + targetRect.width / 2, targetRect.top + targetRect.height * 0.6);
+  }
 
   // Character reaction
   $('stage').className = 'stage act-2';
@@ -628,7 +762,7 @@ function addToCart(product, event) {
 
 function updateCartDisplay() {
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  $('cartCount').textContent = `ตะกร้า: ${cart.length} ชิ้น`;
+  $('cartCount').textContent = `ตะกร้า: ${cart.length} ชิ้น 🔍`;
   $('cartTotal').textContent = `รวม: ${total} บาท`;
   $('tagText').textContent = `${total}฿`;
   if (total > 0) {
@@ -638,10 +772,153 @@ function updateCartDisplay() {
   }
 }
 
+/* ---- Shopping Basket Manager Modal ---- */
+function openBasket() {
+  getAudioContext();
+  SoundFX.boing();
+  renderBasket();
+  $('basketOverlay').classList.add('show');
+}
+
+function renderBasket() {
+  const list = $('basketItems');
+  const sub = $('basketSubtitle');
+  const totalEl = $('basketTotal');
+  if (!list) return;
+
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  sub.textContent = `มีสินค้าทั้งหมด ${cart.length} ชิ้น`;
+  totalEl.textContent = `รวม: ${total} บาท`;
+
+  if (cart.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px 10px;color:var(--ink-light);font-size:14px;font-weight:700;">ตะกร้ายังว่างอยู่เลยค่ะ 🐰<br>แตะเลือกขนมและผลไม้ใส่ตะกร้าได้เลยนะคะ</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  cart.forEach((it, idx) => {
+    const row = document.createElement('div');
+    row.className = 'basket-row';
+    row.innerHTML = `
+      <div class="basket-item-info">
+        <span style="font-size:22px;line-height:1;">${it.icon}</span>
+        <span>${it.name}</span>
+        <b>${it.price}฿</b>
+      </div>
+      <button type="button" class="basket-remove-btn" title="เอาชิ้นนี้ออก">✕</button>
+    `;
+    row.querySelector('.basket-remove-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeFromCart(idx);
+    });
+    list.appendChild(row);
+  });
+}
+
+function removeFromCart(idx) {
+  if (idx < 0 || idx >= cart.length) return;
+  getAudioContext();
+  SoundFX.boing();
+  const removed = cart.splice(idx, 1)[0];
+  updateCartDisplay();
+  renderBasket();
+  checkQuest();
+  speakText(`เอา${removed.name}ออกจากตะกร้าแล้วค่ะ`);
+}
+
+/* ---- Digital Toy Scale System ---- */
+const SCALE_FRUITS = [
+  { id: 'carrot', name: 'แครอทสด', icon: ICONS.carrot, basePrice: 2, unitWeight: 0.5 },
+  { id: 'apple', name: 'แอปเปิ้ล', icon: '🍎', basePrice: 5, unitWeight: 0.6 },
+  { id: 'banana', name: 'กล้วยหอม', icon: '🍌', basePrice: 3, unitWeight: 0.8 },
+  { id: 'watermelon', name: 'แตงโม', icon: '🍉', basePrice: 8, unitWeight: 1.5 },
+  { id: 'orange', name: 'ส้มหวาน', icon: '🍊', basePrice: 4, unitWeight: 0.5 },
+  { id: 'berry', name: 'สตรอว์เบอร์รี', icon: '🍓', basePrice: 5, unitWeight: 0.4 }
+];
+let selectedScaleFruit = null;
+let scaleWeightVal = 0;
+let scalePriceVal = 0;
+
+function openScale() {
+  getAudioContext();
+  SoundFX.boing();
+  selectedScaleFruit = null;
+  scaleWeightVal = 0;
+  scalePriceVal = 0;
+  $('scaleWeight').textContent = '0.00 kg';
+  $('scalePrice').textContent = '0 ฿';
+  $('scaleItemPlaced').innerHTML = '<span class="scale-empty-icon">🥦</span>';
+  $('scaleAddBtn').disabled = true;
+  $('scaleHint').textContent = 'แตะเลือกผลไม้ด้านล่างเพื่อวางบนตาชั่งค่ะ';
+
+  const container = $('scaleFruits');
+  container.innerHTML = '';
+  SCALE_FRUITS.forEach(f => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'scale-fruit-btn';
+    btn.innerHTML = `<span class="scale-fruit-emoji">${f.icon}</span><span>${f.name}</span>`;
+    btn.addEventListener('click', () => selectScaleFruit(f, btn));
+    container.appendChild(btn);
+  });
+
+  $('scaleOverlay').classList.add('show');
+  speakText('นี่คือเครื่องชั่งผลไม้ดิจิทัลค่ะ แตะเลือกผลไม้มาวางบนตาชั่งได้เลย!');
+}
+
+function selectScaleFruit(fruit, btnEl) {
+  getAudioContext();
+  SoundFX.scaleBeep();
+  selectedScaleFruit = fruit;
+  document.querySelectorAll('.scale-fruit-btn').forEach(b => b.classList.remove('selected'));
+  if (btnEl) btnEl.classList.add('selected');
+
+  const mult = 1 + Math.floor(Math.random() * 3);
+  scaleWeightVal = (fruit.unitWeight * mult).toFixed(2);
+  scalePriceVal = fruit.basePrice * mult;
+
+  const placed = $('scaleItemPlaced');
+  placed.innerHTML = `<span style="font-size:46px;line-height:1;">${fruit.icon}</span>`;
+  placed.classList.remove('weighing');
+  void placed.offsetWidth;
+  placed.classList.add('weighing');
+
+  $('scaleWeight').textContent = `${scaleWeightVal} kg`;
+  $('scalePrice').textContent = `${scalePriceVal} ฿`;
+  $('scaleAddBtn').disabled = false;
+  $('scaleHint').textContent = `${fruit.name} หนัก ${scaleWeightVal} กก. ราคา ${scalePriceVal} บาทค่ะ!`;
+
+  speakText(`${fruit.name} น้ำหนัก ${scaleWeightVal} กิโลกรัม ราคา ${scalePriceVal} บาทค่ะ`);
+}
+
+function addScaleItemToCart() {
+  if (!selectedScaleFruit) return;
+  getAudioContext();
+  SoundFX.printReceipt();
+  setTimeout(SoundFX.scanLaser, 200);
+
+  const weightedItem = {
+    id: selectedScaleFruit.id,
+    name: `${selectedScaleFruit.name} (${scaleWeightVal}กก.)`,
+    icon: selectedScaleFruit.icon,
+    price: scalePriceVal,
+    talk: `ชั่งน้ำหนัก ${selectedScaleFruit.name} ${scaleWeightVal} กิโลกรัม เรียบร้อยแล้วค่ะ!`
+  };
+
+  cart.push(weightedItem);
+  updateCartDisplay();
+  checkQuest();
+
+  $('scaleOverlay').classList.remove('show');
+  launchConfetti(30);
+  speakText(`พิมพ์ป้ายราคา ${selectedScaleFruit.name} ใส่ตะกร้าเรียบร้อยค่ะ!`);
+}
+
 let stars = 0;
 try { stars = parseInt(localStorage.getItem('nida_stars') || '0', 10) || 0; } catch(e){}
 function renderStars() { let b = $('starBadge'); if (!b) { b = document.createElement('div'); b.id = 'starBadge'; $('stage').appendChild(b); } b.textContent = '⭐ ' + stars; }
 
+/* ---- Cash Register Drawer Checkout ---- */
 function checkout() {
   if (cart.length === 0) {
     SoundFX.boing();
@@ -649,18 +926,64 @@ function checkout() {
     return;
   }
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  const coins = [20, 50, 100, 500].filter(c => c >= total).slice(0, 3);
+
+  getAudioContext();
+  SoundFX.cashDrawer();
+
   $('payTitle').textContent = `รวม ${total} บาท หนูจ่ายเท่าไหร่คะ?`;
-  $('payChoices').innerHTML = '';
-  coins.forEach(c => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'pay-coin'; b.textContent = c + '฿';
-    b.addEventListener('click', () => { $('payOverlay').classList.remove('show'); finishCheckout(total, c - total); });
-    $('payChoices').appendChild(b);
+  $('drawerHint').textContent = `ยอดรวม ${total} บาท แตะเงินที่คุณพ่อให้มาเพื่อจ่ายนะคะ ✨`;
+
+  const billsBox = $('drawerBills');
+  billsBox.innerHTML = '';
+  const coinsBox = $('drawerCoins');
+  coinsBox.innerHTML = '';
+
+  const BILLS = [
+    { v: 20, cls: 'bill-20', label: '20฿' },
+    { v: 50, cls: 'bill-50', label: '50฿' },
+    { v: 100, cls: 'bill-100', label: '100฿' },
+    { v: 500, cls: 'bill-500', label: '500฿' }
+  ];
+
+  const COINS = [
+    { v: 10, cls: 'coin-10', label: '10฿' },
+    { v: 5, cls: 'coin-5', label: '5฿' },
+    { v: 2, cls: 'coin-2', label: '2฿' },
+    { v: 1, cls: 'coin-1', label: '1฿' }
+  ];
+
+  BILLS.forEach(b => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `drawer-bill ${b.cls}`;
+    btn.textContent = b.label;
+    btn.addEventListener('click', () => handlePayAmount(b.v, total));
+    billsBox.appendChild(btn);
   });
+
+  COINS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `drawer-coin ${c.cls}`;
+    btn.textContent = c.label;
+    btn.addEventListener('click', () => handlePayAmount(c.v, total));
+    coinsBox.appendChild(btn);
+  });
+
   $('payOverlay').classList.add('show');
-  SoundFX.boing();
-  speakText(`รวม ${total} บาทค่ะ หนูจ่ายเงินเท่าไหร่คะ`);
+  speakText(`ยอดรวมทั้งหมด ${total} บาทค่ะ ลิ้นชักเปิดแล้ว หนูจ่ายเงินเท่าไหร่คะ`);
+}
+
+function handlePayAmount(amount, total) {
+  if (amount < total) {
+    getAudioContext();
+    SoundFX.boing();
+    $('drawerHint').textContent = `เงิน ${amount} บาท ยังไม่พอนะคะ (ขาดอีก ${total - amount} บาท) ลองเลือกแบงก์ที่มากกว่านี้นะคะ ✨`;
+    speakText(`เงิน ${amount} บาท ยังไม่พอนะคะ ยอดทั้งหมด ${total} บาท ลองเลือกแบงก์ที่มากกว่านี้นะคะหนู`);
+    return;
+  }
+  $('payOverlay').classList.remove('show');
+  finishCheckout(total, amount - total);
 }
 
 function showReceipt(items, total, change) {
@@ -699,7 +1022,6 @@ function finishCheckout(total, change) {
   try { localStorage.setItem('nida_stars', String(stars)); } catch(e){}
   renderStars();
 
-  // Unlock a sticker for completing checkout!
   unlockRandomSticker();
 
   $('stage').className = 'stage act-3';
@@ -882,6 +1204,7 @@ function clearCart() {
   SoundFX.boing();
   cart = [];
   updateCartDisplay();
+  checkQuest();
   speakText("เริ่มเลือกรอบใหม่กันเลยค่ะ");
 }
 
@@ -1086,6 +1409,37 @@ $('bubble').addEventListener('click', () => speakText(currentText));
 
 $('checkoutBtn').addEventListener('click', checkout);
 $('clearCartBtn').addEventListener('click', clearCart);
+
+// Shopping Basket Manager
+$('cartInfoBtn').addEventListener('click', openBasket);
+$('basketClose').addEventListener('click', () => $('basketOverlay').classList.remove('show'));
+$('basketOverlay').addEventListener('click', (e) => { if (e.target === $('basketOverlay')) $('basketOverlay').classList.remove('show'); });
+$('basketClearBtn').addEventListener('click', () => { clearCart(); renderBasket(); });
+$('basketPayBtn').addEventListener('click', () => { $('basketOverlay').classList.remove('show'); checkout(); });
+
+// Digital Fruit & Veggie Scale
+$('openScaleBtn').addEventListener('click', openScale);
+$('scaleClose').addEventListener('click', () => $('scaleOverlay').classList.remove('show'));
+$('scaleOverlay').addEventListener('click', (e) => { if (e.target === $('scaleOverlay')) $('scaleOverlay').classList.remove('show'); });
+$('scaleAddBtn').addEventListener('click', addScaleItemToCart);
+
+// Quest Reroll & Categories
+$('questRerollBtn').addEventListener('click', () => {
+  SoundFX.boing();
+  newQuest();
+  speakText("เปลี่ยนรายการของใหม่แล้วค่ะ ลองดูนะคะว่าอยากได้อะไร");
+});
+
+document.querySelectorAll('.shop-cat-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    SoundFX.boing();
+    setShopCat(btn.dataset.cat);
+  });
+});
+
+// Cash Drawer Overlay Close
+$('payClose').addEventListener('click', () => $('payOverlay').classList.remove('show'));
+$('payOverlay').addEventListener('click', (e) => { if (e.target === $('payOverlay')) $('payOverlay').classList.remove('show'); });
 
 document.querySelectorAll('#panel-roleplay .btns-grid button').forEach(b => {
   b.addEventListener('click', () => sayRoleplay(b.dataset.k));
@@ -1669,3 +2023,4 @@ document.querySelectorAll('[data-fun]').forEach(b => {
 
 renderProducts();
 renderFeedShelf();
+newQuest();
