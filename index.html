@@ -23,10 +23,13 @@
 
 <canvas id="confettiCanvas"></canvas>
 
-<!-- Top Compact Header with Character Switcher -->
+<!-- Top Compact Header with Character Switcher & Language Switcher -->
 <header>
-  <h1><span class="header-carrot"><svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg></span> ร้านน้องนิดา <span>💖</span></h1>
+  <h1><span class="header-carrot"><svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg></span> <span id="appTitle">ร้านน้องนิดา</span> <span>💖</span></h1>
   <div class="top-actions">
+    <button type="button" class="pill-btn lang-switch-btn" id="langToggleBtn" title="สลับภาษา / Switch Language">
+      🇹🇭<span class="lbl"> TH</span>
+    </button>
     <button type="button" class="pill-btn char-switch-btn" id="charToggleBtn" title="สลับตัวละคร">
       🎨<span class="lbl"> น้องขยับได้</span>
     </button>
@@ -37,7 +40,7 @@
 
 <!-- PWA Install Prompt Banner -->
 <div id="installBanner">
-  <span>⭐ ติดตั้งลงหน้าจอโฮมเพื่อเล่นแบบเต็มจอ</span>
+  <span id="installBannerText">⭐ ติดตั้งลงหน้าจอโฮมเพื่อเล่นแบบเต็มจอ</span>
   <button type="button" id="installBtn">ติดตั้ง</button>
   <button type="button" id="installClose" aria-label="ปิดแถบนี้">✕</button>
 </div>
@@ -181,25 +184,25 @@
   <!-- RIGHT: CONTROLS & SHELVES (NO SCROLLING NEEDED) -->
   <div class="control-panel">
     <!-- Activity Tabs -->
-    <div class="menu-label">📋 เมนู <small>แตะเพื่อเปลี่ยนหน้า</small></div>
+    <div class="menu-label" id="menuLabel">📋 เมนู <small>แตะเพื่อเปลี่ยนหน้า</small></div>
     <div class="tabs" role="tablist">
-      <button type="button" class="tab-btn active" data-tab="shop">
-        <span><svg viewBox="0 0 36 36" class="ui-svg"><path d="M6 6 L10 6 L14 23 L28 23 L31 11 L12 11" fill="none" stroke="#ff65a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="28" r="3" fill="#ff65a5"/><circle cx="26" cy="28" r="3" fill="#ff65a5"/></svg></span> ซื้อของ
+      <button type="button" class="tab-btn active" data-tab="shop" id="tabBtnShop">
+        <span><svg viewBox="0 0 36 36" class="ui-svg"><path d="M6 6 L10 6 L14 23 L28 23 L31 11 L12 11" fill="none" stroke="#ff65a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="28" r="3" fill="#ff65a5"/><circle cx="26" cy="28" r="3" fill="#ff65a5"/></svg></span> <span class="tab-lbl">ซื้อของ</span>
       </button>
-      <button type="button" class="tab-btn" data-tab="feed">
-        <span><svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg></span> ป้อนขนม
+      <button type="button" class="tab-btn" data-tab="feed" id="tabBtnFeed">
+        <span><svg viewBox="0 0 36 36" class="ui-svg"><path d="M22 4 C24 1 30 1 31 5 C35 7 34 13 30 14 C26 15 23 11 22 4 Z" fill="#3ec992"/><path d="M7 32 C5 34 3 33 4 30 C7 23 23 7 28 8 C32 10 30 18 25 22 Z" fill="#ff7a18"/><path d="M18 15 L22 17 M13 20 L18 23 M8 26 L12 28" stroke="#d95a00" stroke-width="2" stroke-linecap="round"/></svg></span> <span class="tab-lbl">ป้อนขนม</span>
       </button>
-      <button type="button" class="tab-btn" data-tab="roleplay">
-        <span>💬</span> ชวนคุย
+      <button type="button" class="tab-btn" data-tab="roleplay" id="tabBtnRoleplay">
+        <span>💬</span> <span class="tab-lbl">ชวนคุย</span>
       </button>
-      <button type="button" class="tab-btn" data-tab="moods">
-        <span>😊</span> อารมณ์
+      <button type="button" class="tab-btn" data-tab="moods" id="tabBtnMoods">
+        <span>😊</span> <span class="tab-lbl">อารมณ์</span>
       </button>
-      <button type="button" class="tab-btn" data-tab="dress">
-        <span>👗</span> แต่งตัว
+      <button type="button" class="tab-btn" data-tab="dress" id="tabBtnDress">
+        <span>👗</span> <span class="tab-lbl">แต่งตัว</span>
       </button>
-      <button type="button" class="tab-btn" data-tab="fun">
-        <span>🎪</span> สนุก
+      <button type="button" class="tab-btn" data-tab="fun" id="tabBtnFun">
+        <span>🎪</span> <span class="tab-lbl">สนุก</span>
       </button>
     </div>
 
@@ -210,7 +213,7 @@
         <!-- Bunny Shopping Quest Card -->
         <div class="quest-box" id="questBox">
           <div class="quest-head">
-            <span class="quest-badge">🎯 ภารกิจน้องกระต่าย</span>
+            <span class="quest-badge" id="questBadge">🎯 ภารกิจน้องกระต่าย</span>
             <button type="button" class="quest-reroll-btn" id="questRerollBtn" title="ขอภารกิจใหม่">🎲 สุ่มใหม่</button>
           </div>
           <div class="quest-content">
@@ -221,10 +224,10 @@
 
         <!-- Shop Category Filter Chips -->
         <div class="shop-cats" id="shopCats" role="tablist" aria-label="หมวดหมู่สินค้า">
-          <button type="button" class="shop-cat-btn active" data-cat="all">🌟 ทั้งหมด</button>
-          <button type="button" class="shop-cat-btn" data-cat="fresh">🥦 ผักผลไม้</button>
-          <button type="button" class="shop-cat-btn" data-cat="bakery">🧁 เบเกอรี่</button>
-          <button type="button" class="shop-cat-btn" data-cat="sweet">🍭 ขนมหวาน</button>
+          <button type="button" class="shop-cat-btn active" data-cat="all" id="catBtnAll">🌟 ทั้งหมด</button>
+          <button type="button" class="shop-cat-btn" data-cat="fresh" id="catBtnFresh">🥦 ผักผลไม้</button>
+          <button type="button" class="shop-cat-btn" data-cat="bakery" id="catBtnBakery">🧁 เบเกอรี่</button>
+          <button type="button" class="shop-cat-btn" data-cat="sweet" id="catBtnSweet">🍭 ขนมหวาน</button>
         </div>
 
         <div class="products-grid" id="productShelf"></div>
@@ -249,22 +252,22 @@
       <!-- 3. ROLEPLAY PANEL (1-4) -->
       <div class="tab-panel" id="panel-roleplay">
         <div class="btns-grid">
-          <button type="button" class="big-btn b1" data-k="1"><b>1</b> ต้อนรับ 👋</button>
-          <button type="button" class="big-btn b2" data-k="2"><b>2</b> รับอะไรดี 💬</button>
-          <button type="button" class="big-btn b3" data-k="3"><b>3</b> บอกราคา <svg viewBox="0 0 36 36" class="ui-svg"><path d="M14 6 L28 20 C29 21 29 23 28 24 L24 28 C23 29 21 29 20 28 L6 14 L6 6 Z" fill="#ff70a6"/><circle cx="11" cy="11" r="2.5" fill="#fff"/></svg></button>
-          <button type="button" class="big-btn b4" data-k="4"><b>4</b> ขอบคุณ 💖</button>
+          <button type="button" class="big-btn b1" data-k="1"><b>1</b> <span class="rp-lbl">ต้อนรับ 👋</span></button>
+          <button type="button" class="big-btn b2" data-k="2"><b>2</b> <span class="rp-lbl">รับอะไรดี 💬</span></button>
+          <button type="button" class="big-btn b3" data-k="3"><b>3</b> <span class="rp-lbl">บอกราคา</span> <svg viewBox="0 0 36 36" class="ui-svg"><path d="M14 6 L28 20 C29 21 29 23 28 24 L24 28 C23 29 21 29 20 28 L6 14 L6 6 Z" fill="#ff70a6"/><circle cx="11" cy="11" r="2.5" fill="#fff"/></svg></button>
+          <button type="button" class="big-btn b4" data-k="4"><b>4</b> <span class="rp-lbl">ขอบคุณ 💖</span></button>
         </div>
       </div>
 
       <!-- 4. MOODS PANEL -->
       <div class="tab-panel" id="panel-moods">
         <div class="moods-grid">
-          <button type="button" class="mood-card" data-mood="happy"><span>😄</span>ดีใจ</button>
-          <button type="button" class="mood-card" data-mood="laugh"><span>😂</span>หัวเราะ</button>
-          <button type="button" class="mood-card" data-mood="surprise"><span>😮</span>ตกใจ</button>
-          <button type="button" class="mood-card" data-mood="sleepy"><span>😴</span>ง่วงนอน</button>
-          <button type="button" class="mood-card" data-mood="dance"><span>💃</span>เต้นระบำ</button>
-          <button type="button" class="mood-card" data-mood="praise"><span>🌟</span>ชมคนเก่ง</button>
+          <button type="button" class="mood-card" data-mood="happy"><span>😄</span><span class="mood-lbl">ดีใจ</span></button>
+          <button type="button" class="mood-card" data-mood="laugh"><span>😂</span><span class="mood-lbl">หัวเราะ</span></button>
+          <button type="button" class="mood-card" data-mood="surprise"><span>😮</span><span class="mood-lbl">ตกใจ</span></button>
+          <button type="button" class="mood-card" data-mood="sleepy"><span>😴</span><span class="mood-lbl">ง่วงนอน</span></button>
+          <button type="button" class="mood-card" data-mood="dance"><span>💃</span><span class="mood-lbl">เต้นระบำ</span></button>
+          <button type="button" class="mood-card" data-mood="praise"><span>🌟</span><span class="mood-lbl">ชมคนเก่ง</span></button>
         </div>
       </div>
       <!-- 5. DRESS-UP PANEL (cards are generated in app.js) -->
@@ -273,22 +276,22 @@
         <div class="dress-grid" id="dressGrid"></div>
         <div class="color-grid" id="colorGrid" hidden></div>
         <div class="dress-actions">
-          <button type="button" class="dress-random" data-acc="random">🎲 สุ่มชุดให้หน่อย</button>
-          <button type="button" class="dress-reset" data-acc="none">✨ ถอดทั้งหมด</button>
+          <button type="button" class="dress-random" data-acc="random" id="dressRandomBtn">🎲 สุ่มชุดให้หน่อย</button>
+          <button type="button" class="dress-reset" data-acc="none" id="dressResetBtn">✨ ถอดทั้งหมด</button>
         </div>
       </div>
 
       <!-- 6. FUN PANEL -->
       <div class="tab-panel" id="panel-fun">
         <div class="fun-grid" id="funGrid">
-          <button type="button" class="mood-card" data-fun="balloons"><span>🎈</span>ลูกโป่ง</button>
-          <button type="button" class="mood-card" data-fun="piano"><span>🎹</span>เปียโน</button>
-          <button type="button" class="mood-card" data-fun="birthday"><span>🎂</span>วันเกิด</button>
-          <button type="button" class="mood-card" data-fun="gachapon"><span>🎁</span>หมุนไข่</button>
-          <button type="button" class="mood-card" data-fun="stickers"><span>🌟</span>สมุดสติกเกอร์</button>
-          <button type="button" class="mood-card" data-fun="photo"><span>📸</span>ถ่ายรูป</button>
-          <button type="button" class="mood-card" data-fun="scene"><span id="sceneIcon">🌈</span>เปลี่ยนฉาก</button>
-          <button type="button" class="mood-card" data-fun="count"><span>🔢</span>นับเลข</button>
+          <button type="button" class="mood-card" data-fun="balloons"><span>🎈</span><span class="fun-lbl">ลูกโป่ง</span></button>
+          <button type="button" class="mood-card" data-fun="piano"><span>🎹</span><span class="fun-lbl">เปียโน</span></button>
+          <button type="button" class="mood-card" data-fun="birthday"><span>🎂</span><span class="fun-lbl">วันเกิด</span></button>
+          <button type="button" class="mood-card" data-fun="gachapon"><span>🎁</span><span class="fun-lbl">หมุนไข่</span></button>
+          <button type="button" class="mood-card" data-fun="stickers"><span>🌟</span><span class="fun-lbl">สมุดสติกเกอร์</span></button>
+          <button type="button" class="mood-card" data-fun="photo"><span>📸</span><span class="fun-lbl">ถ่ายรูป</span></button>
+          <button type="button" class="mood-card" data-fun="scene"><span id="sceneIcon">🌈</span><span class="fun-lbl" id="sceneFunLbl">เปลี่ยนฉาก</span></button>
+          <button type="button" class="mood-card" data-fun="count"><span>🔢</span><span class="fun-lbl">นับเลข</span></button>
         </div>
         <div class="piano-wrap" id="pianoWrap" hidden>
           <div class="piano" id="piano"></div>
@@ -308,11 +311,11 @@
       <div class="drawer-bell-icon">🔔</div>
       <div class="drawer-title" id="payTitle">รวม 0 บาท หนูจ่ายเงินเท่าไหร่คะ?</div>
     </div>
-    <div class="drawer-sub">แตะเลือกธนบัตรหรือเหรียญที่ต้องการจ่ายนะคะ</div>
+    <div class="drawer-sub" id="drawerSub">แตะเลือกธนบัตรหรือเหรียญที่ต้องการจ่ายนะคะ</div>
     <div class="drawer-body">
-      <div class="drawer-section-title">💵 ธนบัตร</div>
+      <div class="drawer-section-title" id="drawerSecBills">💵 ธนบัตร</div>
       <div class="drawer-bills" id="drawerBills"></div>
-      <div class="drawer-section-title">🪙 เหรียญ</div>
+      <div class="drawer-section-title" id="drawerSecCoins">🪙 เหรียญ</div>
       <div class="drawer-coins" id="drawerCoins"></div>
     </div>
     <div class="drawer-footer-hint" id="drawerHint">แตะที่เงินเพื่อชำระเงินได้เลยค่ะ ✨</div>
@@ -323,7 +326,7 @@
 <div class="basket-overlay" id="basketOverlay">
   <div class="basket-box">
     <button type="button" class="ov-close" id="basketClose" aria-label="ปิด">✕</button>
-    <div class="basket-title">🛒 ตะกร้าของน้องนิดา 🛒</div>
+    <div class="basket-title" id="basketTitle">🛒 ตะกร้าของน้องนิดา 🛒</div>
     <div class="basket-subtitle" id="basketSubtitle">มีสินค้าทั้งหมด 0 ชิ้น</div>
     <div class="basket-items" id="basketItems"></div>
     <div class="basket-summary">
@@ -340,7 +343,7 @@
 <div class="scale-overlay" id="scaleOverlay">
   <div class="scale-box">
     <button type="button" class="ov-close" id="scaleClose" aria-label="ปิด">✕</button>
-    <div class="scale-title">⚖️ เครื่องชั่งน้ำหนักผลไม้ดิจิทัล ⚖️</div>
+    <div class="scale-title" id="scaleTitle">⚖️ เครื่องชั่งน้ำหนักผลไม้ดิจิทัล ⚖️</div>
     <div class="scale-hint" id="scaleHint">แตะเลือกผลไม้ด้านล่างเพื่อวางบนตาชั่งค่ะ</div>
     
     <div class="scale-machine">
@@ -358,7 +361,7 @@
       </div>
     </div>
 
-    <div class="scale-section-title">แตะเลือกผลไม้ที่ต้องการชั่ง:</div>
+    <div class="scale-section-title" id="scaleSecTitle">แตะเลือกผลไม้ที่ต้องการชั่ง:</div>
     <div class="scale-fruits" id="scaleFruits"></div>
 
     <div class="scale-actions">
@@ -387,7 +390,7 @@
 <div class="photo-overlay" id="photoOverlay">
   <div class="photo-box">
     <img id="photoImg" alt="รูปน้องนิดา">
-    <div class="photo-hint">มือถือ: กดค้างที่รูปเพื่อบันทึกได้เลย</div>
+    <div class="photo-hint" id="photoHint">มือถือ: กดค้างที่รูปเพื่อบันทึกได้เลย</div>
     <div class="photo-actions">
       <a class="photo-save" id="photoSave" download="nida-photo.png">💾 บันทึกรูป</a>
       <button type="button" class="photo-close" id="photoClose">✕ ปิด</button>
@@ -402,8 +405,8 @@
   <div class="receipt-paper" id="receiptPaper">
     <div class="receipt-zigzag-top"></div>
     <div class="receipt-body">
-      <div class="receipt-shop-name">🐰 ร้านน้องนิดา 🐰</div>
-      <div class="receipt-tagline">✨ ใบเสร็จรับเงินสุดน่ารัก ✨</div>
+      <div class="receipt-shop-name" id="receiptShopName">🐰 ร้านน้องนิดา 🐰</div>
+      <div class="receipt-tagline" id="receiptTagline">✨ ใบเสร็จรับเงินสุดน่ารัก ✨</div>
       <div class="receipt-divider">-----------------------------</div>
       <div class="receipt-meta" id="receiptMeta">วันที่: --/--/----</div>
       <div class="receipt-divider">-----------------------------</div>
@@ -413,7 +416,7 @@
       <div class="receipt-stars" id="receiptStars">⭐ ดาวสะสม: 0 ดวง ⭐</div>
       <div class="receipt-barcode">
         <div class="receipt-bars">||| | |||| | ||| |||| | ||</div>
-        <small>* ขอบคุณลูกค้าน่ารักนะคะ *</small>
+        <small id="receiptThanks">* ขอบคุณลูกค้าน่ารักนะคะ *</small>
       </div>
     </div>
     <div class="receipt-zigzag-bottom"></div>
@@ -427,7 +430,7 @@
 <div class="gacha-overlay" id="gachaOverlay">
   <div class="gacha-box">
     <button type="button" class="ov-close" id="gachaClose" aria-label="ปิด">✕</button>
-    <div class="gacha-title">🎁 ตู้หมุนไข่เซอร์ไพรส์ 🎁</div>
+    <div class="gacha-title" id="gachaTitle">🎁 ตู้หมุนไข่เซอร์ไพรส์ 🎁</div>
     <div class="gacha-machine" id="gachaMachine">
       <div class="gacha-dome" id="gachaDome">
         <div class="gacha-ball b-red"></div>
@@ -437,7 +440,7 @@
         <div class="gacha-ball b-purple"></div>
       </div>
       <button type="button" class="gacha-turn-knob" id="gachaTurnBtn">
-        <span>🔄</span> หมุนตู้ไข่!
+        <span>🔄</span> <span id="gachaTurnLbl">หมุนตู้ไข่!</span>
       </button>
     </div>
     <div class="gacha-prize-zone" id="gachaPrizeZone" style="display:none;">
@@ -452,8 +455,8 @@
 <div class="sticker-overlay" id="stickerOverlay">
   <div class="sticker-box">
     <button type="button" class="ov-close" id="stickerClose" aria-label="ปิด">✕</button>
-    <div class="sticker-title">🌟 สมุดสติกเกอร์คนเก่ง 🌟</div>
-    <div class="sticker-subtitle">ของน้องนิดา (แตะสติกเกอร์เพื่อสะสมลงสมุด)</div>
+    <div class="sticker-title" id="stickerTitle">🌟 สมุดสติกเกอร์คนเก่ง 🌟</div>
+    <div class="sticker-subtitle" id="stickerSubtitle">ของน้องนิดา (แตะสติกเกอร์เพื่อสะสมลงสมุด)</div>
     <div class="sticker-album" id="stickerAlbum">
       <!-- 12 slots -->
     </div>

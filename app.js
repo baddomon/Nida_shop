@@ -417,16 +417,41 @@ function createFlyingEmoji(content, startX, startY, endX, endY, onComplete) {
 }
 
 /* ============================================================
-   3. SPEECH SYNTHESIS & CHARACTER CONTROLLER
+   3. SPEECH SYNTHESIS, LANGUAGE & CHARACTER CONTROLLER
    ============================================================ */
 const $ = id => document.getElementById(id);
 let voices = [];
 let currentAction = 1;
-let currentText = "ยินดีต้อนรับสู่ร้านน้องนิดาค่ะ 💕";
+let currentLang = 'th';
+try {
+  const savedLang = localStorage.getItem('nida_lang');
+  if (savedLang === 'en' || savedLang === 'th') currentLang = savedLang;
+} catch(e){}
+
+let currentText = currentLang === 'en' ? "Welcome to Nida's Shop! 💕" : "ยินดีต้อนรับสู่ร้านน้องนิดาค่ะ 💕";
 let actionTimer = null;
 let mouthTimer = null;
 let currentCharMode = 'vector'; // 'vector' or '3d'
 const voiceAvailable = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+
+function getItemName(item) {
+  if (!item) return '';
+  if (typeof item.name === 'object' && item.name !== null) {
+    return item.name[currentLang] || item.name['th'] || '';
+  }
+  return item.name || '';
+}
+
+function getItemTalk(item) {
+  if (!item) return '';
+  if (typeof item.talk === 'object' && item.talk !== null) {
+    return item.talk[currentLang] || item.talk['th'] || '';
+  }
+  if (typeof item.say === 'object' && item.say !== null) {
+    return item.say[currentLang] || item.say['th'] || '';
+  }
+  return item.talk || item.say || '';
+}
 
 function loadVoices() {
   if (!voiceAvailable) return;
@@ -483,6 +508,7 @@ function stopAll() {
 
 let speakToken = 0, pendingFinish = null, noThaiHinted = false;
 const hasThaiVoice = () => voices.some(v => /^th(-|_|$)/i.test(v.lang));
+const hasEnglishVoice = () => voices.some(v => /^en(-|_|$)/i.test(v.lang));
 
 function showNoThaiHint() {
   if (noThaiHinted) return;
@@ -494,7 +520,8 @@ function showNoThaiHint() {
   $('bubble').insertAdjacentElement('afterend', h);
 }
 
-function speakText(text, pitch = 1.45, rate = 0.88, onDone = null) {
+function speakText(text, pitch = null, rate = null, onDone = null, langOverride = null) {
+  const targetLang = langOverride || currentLang;
   currentText = text;
   $('bubble').textContent = text;
   clearTimeout(actionTimer);
@@ -520,27 +547,44 @@ function speakText(text, pitch = 1.45, rate = 0.88, onDone = null) {
     actionTimer = setTimeout(finish, Math.max(2000, text.length * 105));
   };
 
-  // No speech engine, or voices are loaded but none is Thai -> text + mouth animation only
-  const noThai = voiceAvailable && voices.length > 0 && !hasThaiVoice();
-  if (!voiceAvailable || noThai) {
-    if (noThai) showNoThaiHint();
+  if (!voiceAvailable) {
     silentMode();
     return;
   }
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'th-TH';
-  const thaiVoice = voices.find(v => /^th(-|_|$)/i.test(v.lang));
-  if (thaiVoice) utterance.voice = thaiVoice;
-  utterance.pitch = pitch;
-  utterance.rate = rate;
+
+  if (targetLang === 'en') {
+    const enVoices = voices.filter(v => /^en(-|_|$)/i.test(v.lang));
+    if (enVoices.length > 0) {
+      const preferred = enVoices.find(v => /female|natural|samantha|victoria|zira|jenny|google/i.test(v.name)) || enVoices[0];
+      utterance.voice = preferred;
+      utterance.lang = preferred.lang || 'en-US';
+    } else {
+      utterance.lang = 'en-US';
+    }
+    utterance.pitch = pitch !== null ? pitch : 1.35;
+    utterance.rate = rate !== null ? rate : 0.88;
+  } else {
+    const noThai = voices.length > 0 && !hasThaiVoice();
+    if (noThai) {
+      showNoThaiHint();
+      silentMode();
+      return;
+    }
+    utterance.lang = 'th-TH';
+    const thaiVoice = voices.find(v => /^th(-|_|$)/i.test(v.lang));
+    if (thaiVoice) utterance.voice = thaiVoice;
+    utterance.pitch = pitch !== null ? pitch : 1.45;
+    utterance.rate = rate !== null ? rate : 0.88;
+  }
+
   utterance.volume = 1;
 
   utterance.onstart = () => {
     if (token !== speakToken) return;
     startSpeakingState();
     clearTimeout(actionTimer);
-    // Safety net: some browsers never fire onend for long/paused utterances
     actionTimer = setTimeout(finish, text.length * 220 + 4000);
   };
   utterance.onend = finish;
@@ -550,7 +594,6 @@ function speakText(text, pitch = 1.45, rate = 0.88, onDone = null) {
   };
 
   speechSynthesis.speak(utterance);
-  // Watchdog: engine never started (e.g. iOS blocked it) -> fall back to silent animation
   actionTimer = setTimeout(() => { if (!ended && token === speakToken) silentMode(); }, 1600);
 }
 
@@ -569,13 +612,13 @@ function setCharacterMode(mode) {
   if (mode === 'vector') {
     viewVector.style.display = 'flex';
     view3D.style.display = 'none';
-    btn.innerHTML = '🎨<span class="lbl"> น้องขยับได้</span>';
-    btn.title = 'แตะเพื่อเปลี่ยนเป็นน้อง 3D';
+    btn.innerHTML = currentLang === 'en' ? '🎨<span class="lbl"> Animated</span>' : '🎨<span class="lbl"> น้องขยับได้</span>';
+    btn.title = currentLang === 'en' ? 'Switch to 3D bunny' : 'แตะเพื่อเปลี่ยนเป็นน้อง 3D';
   } else {
     viewVector.style.display = 'none';
     view3D.style.display = 'flex';
-    btn.innerHTML = '🐰<span class="lbl"> น้อง 3D</span>';
-    btn.title = 'แตะเพื่อเปลี่ยนเป็นน้องขยับได้';
+    btn.innerHTML = currentLang === 'en' ? '🐰<span class="lbl"> 3D Photo</span>' : '🐰<span class="lbl"> น้อง 3D</span>';
+    btn.title = currentLang === 'en' ? 'Switch to animated bunny' : 'แตะเพื่อเปลี่ยนเป็นน้องขยับได้';
   }
   try { localStorage.setItem('nida_char_mode', mode); } catch(e){}
 }
@@ -584,7 +627,11 @@ $('charToggleBtn').addEventListener('click', () => {
   SoundFX.boing();
   const nextMode = currentCharMode === 'vector' ? '3d' : 'vector';
   setCharacterMode(nextMode);
-  speakText(nextMode === 'vector' ? "นิดาพร้อมขยับตัวเล่นกับหนูแล้วค่ะ!" : "นี่คือรูปน้องนิดาแบบสามมิตินะคะ!");
+  if (currentLang === 'en') {
+    speakText(nextMode === 'vector' ? "Nida is ready to move and play with you!" : "Here is Nida's 3D photo!");
+  } else {
+    speakText(nextMode === 'vector' ? "นิดาพร้อมขยับตัวเล่นกับหนูแล้วค่ะ!" : "นี่คือรูปน้องนิดาแบบสามมิตินะคะ!");
+  }
 });
 
 // Restore saved preference
@@ -619,27 +666,163 @@ const ICONS = {
    ============================================================ */
 const PRODUCTS = [
   // 🥦 ผักผลไม้ (fresh)
-  { id: 'berry', cat: 'fresh', name: 'สตรอว์เบอร์รี', icon: '🍓', price: 5, talk: 'สตรอว์เบอร์รี หวานฉ่ำ อร่อยมากค่ะ!' },
-  { id: 'carrot', cat: 'fresh', name: 'แครอทสด', icon: ICONS.carrot, price: 2, talk: 'แครอทกรุบกรอบ ของโปรดกระต่ายเลย!' },
-  { id: 'apple', cat: 'fresh', name: 'แอปเปิ้ล', icon: '🍎', price: 5, talk: 'แอปเปิ้ลสีแดง สดใหม่จากสวนค่ะ!' },
-  { id: 'banana', cat: 'fresh', name: 'กล้วยหอม', icon: '🍌', price: 3, talk: 'กล้วยหอมหวาน ให้พลังงานเยอะเลยค่ะ!' },
-  { id: 'orange', cat: 'fresh', name: 'ส้มหวาน', icon: '🍊', price: 4, talk: 'ส้มสีส้ม หวานอมเปรี้ยว สดชื่นจังค่ะ!' },
-  { id: 'watermelon', cat: 'fresh', name: 'แตงโม', icon: '🍉', price: 8, talk: 'แตงโมเย็นฉ่ำ ชื่นใจที่สุดเลยค่ะ!' },
+  {
+    id: 'berry', cat: 'fresh',
+    name: { th: 'สตรอว์เบอร์รี', en: 'Strawberry' },
+    icon: '🍓', price: 5,
+    talk: {
+      th: 'สตรอว์เบอร์รี หวานฉ่ำ อร่อยมากค่ะ!',
+      en: 'Sweet and juicy strawberry! Yummy!'
+    }
+  },
+  {
+    id: 'carrot', cat: 'fresh',
+    name: { th: 'แครอทสด', en: 'Fresh Carrot' },
+    icon: ICONS.carrot, price: 2,
+    talk: {
+      th: 'แครอทกรุบกรอบ ของโปรดกระต่ายเลย!',
+      en: 'Crunchy carrot! Bunny loves it!'
+    }
+  },
+  {
+    id: 'apple', cat: 'fresh',
+    name: { th: 'แอปเปิ้ล', en: 'Red Apple' },
+    icon: '🍎', price: 5,
+    talk: {
+      th: 'แอปเปิ้ลสีแดง สดใหม่จากสวนค่ะ!',
+      en: 'Fresh red apple from the farm!'
+    }
+  },
+  {
+    id: 'banana', cat: 'fresh',
+    name: { th: 'กล้วยหอม', en: 'Banana' },
+    icon: '🍌', price: 3,
+    talk: {
+      th: 'กล้วยหอมหวาน ให้พลังงานเยอะเลยค่ะ!',
+      en: 'Sweet yellow banana! Gives lots of energy!'
+    }
+  },
+  {
+    id: 'orange', cat: 'fresh',
+    name: { th: 'ส้มหวาน', en: 'Sweet Orange' },
+    icon: '🍊', price: 4,
+    talk: {
+      th: 'ส้มสีส้ม หวานอมเปรี้ยว สดชื่นจังค่ะ!',
+      en: 'Sweet juicy orange! So refreshing!'
+    }
+  },
+  {
+    id: 'watermelon', cat: 'fresh',
+    name: { th: 'แตงโม', en: 'Watermelon' },
+    icon: '🍉', price: 8,
+    talk: {
+      th: 'แตงโมเย็นฉ่ำ ชื่นใจที่สุดเลยค่ะ!',
+      en: 'Cool and juicy watermelon! Sweet and yummy!'
+    }
+  },
 
   // 🧁 เบเกอรี่ (bakery)
-  { id: 'cake', cat: 'bakery', name: 'เค้กช็อกโกแลต', icon: '🍰', price: 20, talk: 'เค้กชิ้นโต น่ากินมากเลยค่ะ!' },
-  { id: 'cookie', cat: 'bakery', name: 'คุกกี้', icon: '🍪', price: 8, talk: 'คุกกี้กรอบ ๆ หอมเนยเลยค่ะ!' },
-  { id: 'cupcake', cat: 'bakery', name: 'คัพเค้ก', icon: ICONS.cupcake, price: 12, talk: 'คัพเค้กหน้าสวย หวานอร่อยค่ะ!' },
-  { id: 'donut', cat: 'bakery', name: 'โดนัท', icon: '🍩', price: 15, talk: 'โดนัทหน้าช็อกโกแลต นุ่มฟูเลยค่ะ!' },
-  { id: 'bread', cat: 'bakery', name: 'ขนมปังปิ้ง', icon: '🍞', price: 6, talk: 'ขนมปังหอมกรุ่น นุ่มฟูมากค่ะ!' },
+  {
+    id: 'cake', cat: 'bakery',
+    name: { th: 'เค้กช็อกโกแลต', en: 'Chocolate Cake' },
+    icon: '🍰', price: 20,
+    talk: {
+      th: 'เค้กชิ้นโต น่ากินมากเลยค่ะ!',
+      en: 'Chocolate cake! Big and delicious!'
+    }
+  },
+  {
+    id: 'cookie', cat: 'bakery',
+    name: { th: 'คุกกี้', en: 'Cookie' },
+    icon: '🍪', price: 8,
+    talk: {
+      th: 'คุกกี้กรอบ ๆ หอมเนยเลยค่ะ!',
+      en: 'Crispy buttery cookie! Smells so good!'
+    }
+  },
+  {
+    id: 'cupcake', cat: 'bakery',
+    name: { th: 'คัพเค้ก', en: 'Cupcake' },
+    icon: ICONS.cupcake, price: 12,
+    talk: {
+      th: 'คัพเค้กหน้าสวย หวานอร่อยค่ะ!',
+      en: 'Pretty cupcake! Sweet and lovely!'
+    }
+  },
+  {
+    id: 'donut', cat: 'bakery',
+    name: { th: 'โดนัท', en: 'Donut' },
+    icon: '🍩', price: 15,
+    talk: {
+      th: 'โดนัทหน้าช็อกโกแลต นุ่มฟูเลยค่ะ!',
+      en: 'Chocolate donut! Fluffy and sweet!'
+    }
+  },
+  {
+    id: 'bread', cat: 'bakery',
+    name: { th: 'ขนมปังปิ้ง', en: 'Toast Bread' },
+    icon: '🍞', price: 6,
+    talk: {
+      th: 'ขนมปังหอมกรุ่น นุ่มฟูมากค่ะ!',
+      en: 'Warm toast bread! Soft and crispy!'
+    }
+  },
 
   // 🍭 ขนมหวาน & เครื่องดื่ม (sweet)
-  { id: 'icecream', cat: 'sweet', name: 'ไอศกรีม', icon: '🍦', price: 10, talk: 'ไอศกรีมหวานเย็น ชื่นใจที่สุดค่ะ!' },
-  { id: 'milk', cat: 'sweet', name: 'นมสดกล่อง', icon: ICONS.milk, price: 10, talk: 'นมสดดื่มแล้วแข็งแรง ตัวโตไว ๆ นะคะ!' },
-  { id: 'candy', cat: 'sweet', name: 'อมยิ้ม', icon: '🍭', price: 5, talk: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!' },
-  { id: 'pudding', cat: 'sweet', name: 'พุดดิ้ง', icon: '🍮', price: 14, talk: 'พุดดิ้งดึ๋งดั๋ง หวานละมุนลิ้นค่ะ!' },
-  { id: 'chocolate', cat: 'sweet', name: 'ช็อกโกแลต', icon: '🍫', price: 12, talk: 'ช็อกโกแลตเข้มข้น อร่อยติดใจเลยค่ะ!' },
-  { id: 'bear', cat: 'sweet', name: 'ตุ๊กตาหมี', icon: ICONS.bear, price: 25, talk: 'น้องหมีนุ่มนิ่ม น่ารักจังเลย!' }
+  {
+    id: 'icecream', cat: 'sweet',
+    name: { th: 'ไอศกรีม', en: 'Ice Cream' },
+    icon: '🍦', price: 10,
+    talk: {
+      th: 'ไอศกรีมหวานเย็น ชื่นใจที่สุดค่ะ!',
+      en: 'Cold and creamy ice cream! Yummy!'
+    }
+  },
+  {
+    id: 'milk', cat: 'sweet',
+    name: { th: 'นมสดกล่อง', en: 'Fresh Milk' },
+    icon: ICONS.milk, price: 10,
+    talk: {
+      th: 'นมสดดื่มแล้วแข็งแรง ตัวโตไว ๆ นะคะ!',
+      en: 'Fresh milk! Drink milk and grow big and strong!'
+    }
+  },
+  {
+    id: 'candy', cat: 'sweet',
+    name: { th: 'อมยิ้ม', en: 'Lollipop' },
+    icon: '🍭', price: 5,
+    talk: {
+      th: 'อมยิ้มหวาน ๆ เพิ่มความสดใสค่ะ!',
+      en: 'Sweet lollipop! Rainbow candy!'
+    }
+  },
+  {
+    id: 'pudding', cat: 'sweet',
+    name: { th: 'พุดดิ้ง', en: 'Pudding' },
+    icon: '🍮', price: 14,
+    talk: {
+      th: 'พุดดิ้งดึ๋งดั๋ง หวานละมุนลิ้นค่ะ!',
+      en: 'Jiggly pudding! Sweet and smooth!'
+    }
+  },
+  {
+    id: 'chocolate', cat: 'sweet',
+    name: { th: 'ช็อกโกแลต', en: 'Chocolate' },
+    icon: '🍫', price: 12,
+    talk: {
+      th: 'ช็อกโกแลตเข้มข้น อร่อยติดใจเลยค่ะ!',
+      en: 'Chocolate bar! Rich and delicious!'
+    }
+  },
+  {
+    id: 'bear', cat: 'sweet',
+    name: { th: 'ตุ๊กตาหมี', en: 'Teddy Bear' },
+    icon: ICONS.bear, price: 25,
+    talk: {
+      th: 'น้องหมีนุ่มนิ่ม น่ารักจังเลย!',
+      en: 'Teddy bear! So soft, cuddly and cute!'
+    }
+  }
 ];
 
 let cart = [];
@@ -662,13 +845,14 @@ function renderProducts() {
     : PRODUCTS.filter(p => p.cat === currentShopCat);
 
   filtered.forEach(p => {
+    const pName = getItemName(p);
     const card = document.createElement('div');
     card.className = 'prod-card';
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.innerHTML = `
       <div class="prod-emoji">${p.icon}</div>
-      <div class="prod-name">${p.name}</div>
+      <div class="prod-name">${pName}</div>
       <div class="prod-price">${p.price}฿</div>
     `;
     card.addEventListener('click', (e) => addToCart(p, e));
@@ -695,15 +879,19 @@ function renderQuest() {
   const itemsBox = $('questItems');
   if (!box || !speech || !itemsBox || !currentQuest) return;
 
-  const names = currentQuest.items.map(it => it.name).join(' กับ ');
-  speech.innerHTML = `ช่วยหยิบ <b>${names}</b> ใส่ตะกร้าหน่อยนะคะหนู:`;
+  const sep = currentLang === 'en' ? ' and ' : ' กับ ';
+  const names = currentQuest.items.map(it => getItemName(it)).join(sep);
+  speech.innerHTML = currentLang === 'en' 
+    ? `Please put <b>${names}</b> into the basket:`
+    : `ช่วยหยิบ <b>${names}</b> ใส่ตะกร้าหน่อยนะคะหนู:`;
 
   itemsBox.innerHTML = '';
   currentQuest.items.forEach(it => {
     const inCart = cart.some(c => c.id === it.id);
+    const itName = getItemName(it);
     const chip = document.createElement('span');
     chip.className = 'quest-chip' + (inCart ? ' found' : '');
-    chip.innerHTML = `${it.icon} ${it.name} ${inCart ? '✓' : ''}`;
+    chip.innerHTML = `${it.icon} ${itName} ${inCart ? '✓' : ''}`;
     itemsBox.appendChild(chip);
   });
 }
@@ -723,8 +911,12 @@ function checkQuest() {
     SoundFX.fanfare();
     launchConfetti(50);
     $('questBox').classList.add('quest-done');
-    $('questSpeech').innerHTML = '🎉 <b>ภารกิจสำเร็จแล้ว!</b> ได้ของครบแล้ว ได้ดาวพิเศษ +2 ดวง ⭐⭐';
-    speakText("ว้าววว! ได้ของครบตามที่อยากได้แล้ว น้องนิดาเก่งที่สุดเลยค่ะ ได้ดาวพิเศษเพิ่มสองดวงเลย!");
+    $('questSpeech').innerHTML = currentLang === 'en'
+      ? '🎉 <b>Quest Complete!</b> Found everything! +2 Stars ⭐⭐'
+      : '🎉 <b>ภารกิจสำเร็จแล้ว!</b> ได้ของครบแล้ว ได้ดาวพิเศษ +2 ดวง ⭐⭐';
+    speakText(currentLang === 'en'
+      ? "Hooray! You found everything in the quest! You are amazing! Two bonus stars for you!"
+      : "ว้าววว! ได้ของครบตามที่อยากได้แล้ว น้องนิดาเก่งที่สุดเลยค่ะ ได้ดาวพิเศษเพิ่มสองดวงเลย!");
     setTimeout(() => {
       $('questBox').classList.remove('quest-done');
       newQuest();
@@ -757,13 +949,15 @@ function addToCart(product, event) {
 
   // Character reaction
   $('stage').className = 'stage act-2';
-  speakText(product.talk);
+  speakText(getItemTalk(product));
 }
 
 function updateCartDisplay() {
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  $('cartCount').textContent = `ตะกร้า: ${cart.length} ชิ้น 🔍`;
-  $('cartTotal').textContent = `รวม: ${total} บาท`;
+  $('cartCount').textContent = currentLang === 'en' 
+    ? `Cart: ${cart.length} ${cart.length === 1 ? 'item' : 'items'} 🔍`
+    : `ตะกร้า: ${cart.length} ชิ้น 🔍`;
+  $('cartTotal').textContent = currentLang === 'en' ? `Total: ${total} ฿` : `รวม: ${total} บาท`;
   $('tagText').textContent = `${total}฿`;
   if (total > 0) {
     $('tag').classList.add('show');
@@ -787,11 +981,15 @@ function renderBasket() {
   if (!list) return;
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  sub.textContent = `มีสินค้าทั้งหมด ${cart.length} ชิ้น`;
-  totalEl.textContent = `รวม: ${total} บาท`;
+  sub.textContent = currentLang === 'en' 
+    ? `Total ${cart.length} ${cart.length === 1 ? 'item' : 'items'} in basket`
+    : `มีสินค้าทั้งหมด ${cart.length} ชิ้น`;
+  totalEl.textContent = currentLang === 'en' ? `Total: ${total} ฿` : `รวม: ${total} บาท`;
 
   if (cart.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:24px 10px;color:var(--ink-light);font-size:14px;font-weight:700;">ตะกร้ายังว่างอยู่เลยค่ะ 🐰<br>แตะเลือกขนมและผลไม้ใส่ตะกร้าได้เลยนะคะ</div>';
+    list.innerHTML = currentLang === 'en'
+      ? '<div style="text-align:center;padding:24px 10px;color:var(--ink-light);font-size:14px;font-weight:700;">Your basket is empty! 🐰<br>Tap some treats and fruits to add them!</div>'
+      : '<div style="text-align:center;padding:24px 10px;color:var(--ink-light);font-size:14px;font-weight:700;">ตะกร้ายังว่างอยู่เลยค่ะ 🐰<br>แตะเลือกขนมและผลไม้ใส่ตะกร้าได้เลยนะคะ</div>';
     return;
   }
 
@@ -799,13 +997,14 @@ function renderBasket() {
   cart.forEach((it, idx) => {
     const row = document.createElement('div');
     row.className = 'basket-row';
+    const itemName = getItemName(it);
     row.innerHTML = `
       <div class="basket-item-info">
         <span style="font-size:22px;line-height:1;">${it.icon}</span>
-        <span>${it.name}</span>
+        <span>${itemName}</span>
         <b>${it.price}฿</b>
       </div>
-      <button type="button" class="basket-remove-btn" title="เอาชิ้นนี้ออก">✕</button>
+      <button type="button" class="basket-remove-btn" title="${currentLang === 'en' ? 'Remove item' : 'เอาชิ้นนี้ออก'}">✕</button>
     `;
     row.querySelector('.basket-remove-btn').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -823,17 +1022,18 @@ function removeFromCart(idx) {
   updateCartDisplay();
   renderBasket();
   checkQuest();
-  speakText(`เอา${removed.name}ออกจากตะกร้าแล้วค่ะ`);
+  const rName = getItemName(removed);
+  speakText(currentLang === 'en' ? `Removed ${rName} from your basket!` : `เอา${rName}ออกจากตะกร้าแล้วค่ะ`);
 }
 
 /* ---- Digital Toy Scale System ---- */
 const SCALE_FRUITS = [
-  { id: 'carrot', name: 'แครอทสด', icon: ICONS.carrot, basePrice: 2, unitWeight: 0.5 },
-  { id: 'apple', name: 'แอปเปิ้ล', icon: '🍎', basePrice: 5, unitWeight: 0.6 },
-  { id: 'banana', name: 'กล้วยหอม', icon: '🍌', basePrice: 3, unitWeight: 0.8 },
-  { id: 'watermelon', name: 'แตงโม', icon: '🍉', basePrice: 8, unitWeight: 1.5 },
-  { id: 'orange', name: 'ส้มหวาน', icon: '🍊', basePrice: 4, unitWeight: 0.5 },
-  { id: 'berry', name: 'สตรอว์เบอร์รี', icon: '🍓', basePrice: 5, unitWeight: 0.4 }
+  { id: 'carrot', name: { th: 'แครอทสด', en: 'Fresh Carrot' }, icon: ICONS.carrot, basePrice: 2, unitWeight: 0.5 },
+  { id: 'apple', name: { th: 'แอปเปิ้ล', en: 'Red Apple' }, icon: '🍎', basePrice: 5, unitWeight: 0.6 },
+  { id: 'banana', name: { th: 'กล้วยหอม', en: 'Banana' }, icon: '🍌', basePrice: 3, unitWeight: 0.8 },
+  { id: 'watermelon', name: { th: 'แตงโม', en: 'Watermelon' }, icon: '🍉', basePrice: 8, unitWeight: 1.5 },
+  { id: 'orange', name: { th: 'ส้มหวาน', en: 'Sweet Orange' }, icon: '🍊', basePrice: 4, unitWeight: 0.5 },
+  { id: 'berry', name: { th: 'สตรอว์เบอร์รี', en: 'Strawberry' }, icon: '🍓', basePrice: 5, unitWeight: 0.4 }
 ];
 let selectedScaleFruit = null;
 let scaleWeightVal = 0;
@@ -849,21 +1049,26 @@ function openScale() {
   $('scalePrice').textContent = '0 ฿';
   $('scaleItemPlaced').innerHTML = '<span class="scale-empty-icon">🥦</span>';
   $('scaleAddBtn').disabled = true;
-  $('scaleHint').textContent = 'แตะเลือกผลไม้ด้านล่างเพื่อวางบนตาชั่งค่ะ';
+  $('scaleHint').textContent = currentLang === 'en' 
+    ? 'Tap a fruit below to place it on the scale' 
+    : 'แตะเลือกผลไม้ด้านล่างเพื่อวางบนตาชั่งค่ะ';
 
   const container = $('scaleFruits');
   container.innerHTML = '';
   SCALE_FRUITS.forEach(f => {
+    const fName = getItemName(f);
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'scale-fruit-btn';
-    btn.innerHTML = `<span class="scale-fruit-emoji">${f.icon}</span><span>${f.name}</span>`;
+    btn.innerHTML = `<span class="scale-fruit-emoji">${f.icon}</span><span>${fName}</span>`;
     btn.addEventListener('click', () => selectScaleFruit(f, btn));
     container.appendChild(btn);
   });
 
   $('scaleOverlay').classList.add('show');
-  speakText('นี่คือเครื่องชั่งผลไม้ดิจิทัลค่ะ แตะเลือกผลไม้มาวางบนตาชั่งได้เลย!');
+  speakText(currentLang === 'en' 
+    ? 'Welcome to the digital fruit scale! Tap a fruit to weigh it on the scale!'
+    : 'นี่คือเครื่องชั่งผลไม้ดิจิทัลค่ะ แตะเลือกผลไม้มาวางบนตาชั่งได้เลย!');
 }
 
 function selectScaleFruit(fruit, btnEl) {
@@ -886,9 +1091,14 @@ function selectScaleFruit(fruit, btnEl) {
   $('scaleWeight').textContent = `${scaleWeightVal} kg`;
   $('scalePrice').textContent = `${scalePriceVal} ฿`;
   $('scaleAddBtn').disabled = false;
-  $('scaleHint').textContent = `${fruit.name} หนัก ${scaleWeightVal} กก. ราคา ${scalePriceVal} บาทค่ะ!`;
+  const fName = getItemName(fruit);
+  $('scaleHint').textContent = currentLang === 'en'
+    ? `${fName} weighs ${scaleWeightVal} kg. Price is ${scalePriceVal} ฿!`
+    : `${fName} หนัก ${scaleWeightVal} กก. ราคา ${scalePriceVal} บาทค่ะ!`;
 
-  speakText(`${fruit.name} น้ำหนัก ${scaleWeightVal} กิโลกรัม ราคา ${scalePriceVal} บาทค่ะ`);
+  speakText(currentLang === 'en'
+    ? `${fName}! Weight is ${scaleWeightVal} kilograms, price is ${scalePriceVal} Baht!`
+    : `${fName} น้ำหนัก ${scaleWeightVal} กิโลกรัม ราคา ${scalePriceVal} บาทค่ะ`);
 }
 
 function addScaleItemToCart() {
@@ -897,12 +1107,18 @@ function addScaleItemToCart() {
   SoundFX.printReceipt();
   setTimeout(SoundFX.scanLaser, 200);
 
+  const thName = `${selectedScaleFruit.name.th || selectedScaleFruit.name} (${scaleWeightVal}กก.)`;
+  const enName = `${selectedScaleFruit.name.en || selectedScaleFruit.name} (${scaleWeightVal}kg)`;
+
   const weightedItem = {
     id: selectedScaleFruit.id,
-    name: `${selectedScaleFruit.name} (${scaleWeightVal}กก.)`,
+    name: { th: thName, en: enName },
     icon: selectedScaleFruit.icon,
     price: scalePriceVal,
-    talk: `ชั่งน้ำหนัก ${selectedScaleFruit.name} ${scaleWeightVal} กิโลกรัม เรียบร้อยแล้วค่ะ!`
+    talk: {
+      th: `ชั่งน้ำหนัก ${selectedScaleFruit.name.th} ${scaleWeightVal} กิโลกรัม เรียบร้อยแล้วค่ะ!`,
+      en: `Weighed ${selectedScaleFruit.name.en} ${scaleWeightVal} kilograms! Ready to buy!`
+    }
   };
 
   cart.push(weightedItem);
@@ -911,7 +1127,10 @@ function addScaleItemToCart() {
 
   $('scaleOverlay').classList.remove('show');
   launchConfetti(30);
-  speakText(`พิมพ์ป้ายราคา ${selectedScaleFruit.name} ใส่ตะกร้าเรียบร้อยค่ะ!`);
+  const fName = getItemName(selectedScaleFruit);
+  speakText(currentLang === 'en'
+    ? `Price tag printed for ${fName}! Added to basket!`
+    : `พิมพ์ป้ายราคา ${fName} ใส่ตะกร้าเรียบร้อยค่ะ!`);
 }
 
 let stars = 0;
@@ -922,7 +1141,7 @@ function renderStars() { let b = $('starBadge'); if (!b) { b = document.createEl
 function checkout() {
   if (cart.length === 0) {
     SoundFX.boing();
-    speakText("ยังไม่มีของในตะกร้าเลยค่ะ ลองแตะเลือกของก่อนนะคะหนู");
+    speakText(currentLang === 'en' ? "Your basket is empty! Let's choose some items first!" : "ยังไม่มีของในตะกร้าเลยค่ะ ลองแตะเลือกของก่อนนะคะหนู");
     return;
   }
   const total = cart.reduce((sum, item) => sum + item.price, 0);
@@ -930,8 +1149,8 @@ function checkout() {
   getAudioContext();
   SoundFX.cashDrawer();
 
-  $('payTitle').textContent = `รวม ${total} บาท หนูจ่ายเท่าไหร่คะ?`;
-  $('drawerHint').textContent = `ยอดรวม ${total} บาท แตะเงินที่คุณพ่อให้มาเพื่อจ่ายนะคะ ✨`;
+  $('payTitle').textContent = currentLang === 'en' ? `Total ${total} ฿. How much do you pay?` : `รวม ${total} บาท หนูจ่ายเท่าไหร่คะ?`;
+  $('drawerHint').textContent = currentLang === 'en' ? `Total is ${total} ฿. Tap money to pay! ✨` : `ยอดรวม ${total} บาท แตะเงินที่คุณพ่อให้มาเพื่อจ่ายนะคะ ✨`;
 
   const billsBox = $('drawerBills');
   billsBox.innerHTML = '';
@@ -971,15 +1190,22 @@ function checkout() {
   });
 
   $('payOverlay').classList.add('show');
-  speakText(`ยอดรวมทั้งหมด ${total} บาทค่ะ ลิ้นชักเปิดแล้ว หนูจ่ายเงินเท่าไหร่คะ`);
+  speakText(currentLang === 'en' 
+    ? `The total is ${total} Baht! The cash drawer is open. How much would you like to pay?`
+    : `ยอดรวมทั้งหมด ${total} บาทค่ะ ลิ้นชักเปิดแล้ว หนูจ่ายเงินเท่าไหร่คะ`);
 }
 
 function handlePayAmount(amount, total) {
   if (amount < total) {
     getAudioContext();
     SoundFX.boing();
-    $('drawerHint').textContent = `เงิน ${amount} บาท ยังไม่พอนะคะ (ขาดอีก ${total - amount} บาท) ลองเลือกแบงก์ที่มากกว่านี้นะคะ ✨`;
-    speakText(`เงิน ${amount} บาท ยังไม่พอนะคะ ยอดทั้งหมด ${total} บาท ลองเลือกแบงก์ที่มากกว่านี้นะคะหนู`);
+    const short = total - amount;
+    $('drawerHint').textContent = currentLang === 'en'
+      ? `${amount} ฿ is not enough (need ${short} ฿ more). Try a bigger note! ✨`
+      : `เงิน ${amount} บาท ยังไม่พอนะคะ (ขาดอีก ${short} บาท) ลองเลือกแบงก์ที่มากกว่านี้นะคะ ✨`;
+    speakText(currentLang === 'en'
+      ? `${amount} Baht is not quite enough. The total is ${total} Baht. Let's pick a bigger bill!`
+      : `เงิน ${amount} บาท ยังไม่พอนะคะ ยอดทั้งหมด ${total} บาท ลองเลือกแบงก์ที่มากกว่านี้นะคะหนู`);
     return;
   }
   $('payOverlay').classList.remove('show');
@@ -989,8 +1215,9 @@ function handlePayAmount(amount, total) {
 function showReceipt(items, total, change) {
   const meta = $('receiptMeta');
   const now = new Date();
-  const dStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-  if (meta) meta.textContent = 'เวลา: ' + dStr;
+  const loc = currentLang === 'en' ? 'en-US' : 'th-TH';
+  const dStr = now.toLocaleDateString(loc) + ' ' + now.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
+  if (meta) meta.textContent = (currentLang === 'en' ? 'Time: ' : 'เวลา: ') + dStr;
 
   const box = $('receiptItems');
   if (box) {
@@ -998,16 +1225,23 @@ function showReceipt(items, total, change) {
     items.forEach(it => {
       const row = document.createElement('div');
       row.className = 'receipt-line';
-      row.innerHTML = `<span>${it.name}</span><span>${it.price}฿</span>`;
+      const itName = getItemName(it);
+      row.innerHTML = `<span>${itName}</span><span>${it.price}฿</span>`;
       box.appendChild(row);
     });
   }
 
   const tEl = $('receiptTotal');
-  if (tEl) tEl.textContent = `ยอดรวม: ${total} บาท` + (change > 0 ? ` (ทอน ${change}฿)` : '');
+  if (tEl) {
+    if (currentLang === 'en') {
+      tEl.textContent = `Total: ${total} ฿` + (change > 0 ? ` (Change ${change}฿)` : '');
+    } else {
+      tEl.textContent = `ยอดรวม: ${total} บาท` + (change > 0 ? ` (ทอน ${change}฿)` : '');
+    }
+  }
 
   const sEl = $('receiptStars');
-  if (sEl) sEl.textContent = `⭐ ดาวสะสม: ${stars} ดวง ⭐`;
+  if (sEl) sEl.textContent = currentLang === 'en' ? `⭐ Total Stars: ${stars} ⭐` : `⭐ ดาวสะสม: ${stars} ดวง ⭐`;
 
   SoundFX.printReceipt();
   $('receiptOverlay').classList.add('show');
@@ -1028,15 +1262,27 @@ function finishCheckout(total, change) {
   $('tag').classList.add('show');
 
   const boughtItems = [...cart];
-  const changeTxt = change > 0 ? ` ทอนเงิน ${change} บาทค่ะ` : ' จ่ายพอดีเลยค่ะ เก่งมาก';
-  const praises = [
+  let changeTxt = '';
+  if (currentLang === 'en') {
+    changeTxt = change > 0 ? ` Here is your change: ${change} ฿!` : ' Exact payment, well done!';
+  } else {
+    changeTxt = change > 0 ? ` ทอนเงิน ${change} บาทค่ะ` : ' จ่ายพอดีเลยค่ะ เก่งมาก';
+  }
+
+  const praisesTH = [
     `คิดเงินเรียบร้อย รวม ${total} บาท${changeTxt} ขอบคุณลูกค้าน่ารักนะคะ!`,
     `ทั้งหมด ${total} บาทค่ะ${changeTxt} ขอให้ทานให้อร่อยนะคะ`,
     `เย้ ซื้อของครบแล้ว ${total} บาท${changeTxt} ขอบคุณน้องนิดามากค่ะ!`
   ];
+  const praisesEN = [
+    `Payment complete! Total is ${total} Baht.${changeTxt} Thank you for shopping with us!`,
+    `That is ${total} Baht.${changeTxt} Enjoy your yummy treats!`,
+    `Hooray! All done, ${total} Baht.${changeTxt} Thank you so much!`
+  ];
+  const praises = currentLang === 'en' ? praisesEN : praisesTH;
   let msg = praises[Math.floor(Math.random() * praises.length)];
   if (stars % 5 === 0) {
-    msg += ` ว้าว ได้ดาวครบ ${stars} ดวงแล้ว เก่งที่สุดเลย!`;
+    msg += currentLang === 'en' ? ` Wow, you earned ${stars} stars! Super clever!` : ` ว้าว ได้ดาวครบ ${stars} ดวงแล้ว เก่งที่สุดเลย!`;
     setTimeout(() => { launchConfetti(70); SoundFX.fanfare(); }, 700);
   }
   speakText(msg, 1.4, 0.86, () => {
@@ -1048,38 +1294,39 @@ function finishCheckout(total, change) {
 
 /* ---- Dress-up (v2.9: categories, 22 items, dress colours) ---- */
 const DRESS_CATS = [
-  { k: 'hat',   icon: '🎩', name: 'หมวก' },
-  { k: 'face',  icon: '👓', name: 'หน้า' },
-  { k: 'body',  icon: '👗', name: 'ตัว' },
-  { k: 'hold',  icon: '🎈', name: 'ถือ' },
-  { k: 'color', icon: '🎨', name: 'สีชุด' }
+  { k: 'hat',   icon: '🎩', name: { th: 'หมวก', en: 'Hats' } },
+  { k: 'face',  icon: '👓', name: { th: 'หน้า', en: 'Face' } },
+  { k: 'body',  icon: '👗', name: { th: 'ตัว', en: 'Body' } },
+  { k: 'hold',  icon: '🎈', name: { th: 'ถือ', en: 'Hold' } },
+  { k: 'color', icon: '🎨', name: { th: 'สีชุด', en: 'Dress' } }
 ];
+
 const DRESS = [
-  { k: 'Crown',   cat: 'hat',  e: '👑',           n: 'มงกุฎ',        say: 'มงกุฎสวยจังเลยค่ะ เหมือนเจ้าหญิงเลย' },
-  { k: 'Chef',    cat: 'hat',  e: ICONS.chef,     n: 'หมวกเชฟ',      say: 'หมวกเชฟค่ะ วันนี้ทำขนมอร่อย ๆ กันนะคะ' },
-  { k: 'Party',   cat: 'hat',  e: '🎉',           n: 'หมวกปาร์ตี้',   say: 'หมวกปาร์ตี้ค่ะ ฉลองกันเลย' },
-  { k: 'Cap',     cat: 'hat',  e: ICONS.cap,      n: 'หมวกแก๊ป',      say: 'หมวกแก๊ปสีฟ้า เท่จังเลยค่ะ' },
-  { k: 'Wizard',  cat: 'hat',  e: ICONS.wizard,   n: 'หมวกพ่อมด',    say: 'หมวกพ่อมดค่ะ ซิมซาลาบิม เสกขนมออกมาเลย' },
-  { k: 'Flower',  cat: 'hat',  e: '🌸',           n: 'ติดดอกไม้',     say: 'ดอกไม้สวยจังเลย หอมด้วยนะคะ' },
-  { k: 'Glasses', cat: 'face', e: '👓',           n: 'แว่นตา',        say: 'ใส่แว่นแล้วดูฉลาดเลยค่ะ' },
-  { k: 'Shades',  cat: 'face', e: '😎',           n: 'แว่นกันแดด',    say: 'แว่นกันแดด เท่สุด ๆ ไปเลยค่ะ' },
-  { k: 'HeartGlasses', cat: 'face', e: '😍',      n: 'แว่นหัวใจ',     say: 'แว่นหัวใจ น่ารักที่สุดเลยค่ะ' },
-  { k: 'Mustache', cat: 'face', e: ICONS.mustache, n: 'หนวด',        say: 'ฮ่า ฮ่า หนวดเท่ ๆ เหมือนคุณลุงเลยค่ะ' },
-  { k: 'Sticker', cat: 'face', e: '⭐',           n: 'สติกเกอร์แก้ม', say: 'สติกเกอร์ดาวกับหัวใจที่แก้ม น่ารักจัง' },
-  { k: 'Phones',  cat: 'face', e: '🎧',           n: 'หูฟัง',         say: 'ใส่หูฟัง ฟังเพลงเพราะ ๆ กันค่ะ' },
-  { k: 'Scarf',   cat: 'body', e: ICONS.scarf,    n: 'ผ้าพันคอ',      say: 'ผ้าพันคอ อุ่นสบายเลยค่ะ' },
-  { k: 'Bowtie',  cat: 'body', e: '🎀',           n: 'โบว์ผูกคอ',     say: 'โบว์ผูกคอสีม่วง ดูเป็นสุภาพบุรุษเลยค่ะ' },
-  { k: 'Necklace', cat: 'body', e: ICONS.necklace, n: 'สร้อยไข่มุก',  say: 'สร้อยไข่มุกสวยแวววาวเลยค่ะ' },
-  { k: 'Apron',   cat: 'body', e: ICONS.apron,    n: 'ผ้ากันเปื้อน',  say: 'ผ้ากันเปื้อน พร้อมขายของแล้วค่ะ' },
-  { k: 'Cape',    cat: 'body', e: ICONS.cape,     n: 'ผ้าคลุมฮีโร่',  say: 'ผ้าคลุมซุปเปอร์ฮีโร่ บินได้เลยนะคะ ฟิ้วว' },
-  { k: 'Wings',   cat: 'body', e: ICONS.wings,    n: 'ปีกนางฟ้า',     say: 'ปีกนางฟ้า กระพือปีกได้ด้วยนะคะ' },
-  { k: 'Wand',    cat: 'hold', e: '✨',           n: 'ไม้กายสิทธิ์',   say: 'ไม้กายสิทธิ์ค่ะ วิบ วิบ เสกให้เลย' },
-  { k: 'Balloon', cat: 'hold', e: '🎈',           n: 'ลูกโป่ง',       say: 'ลูกโป่งสีแดง ลอยสูงเลยค่ะ' },
-  { k: 'Lollipop', cat: 'hold', e: '🍭',          n: 'อมยิ้มยักษ์',   say: 'อมยิ้มใหญ่มาก หวานจัง' },
-  { k: 'Bouquet', cat: 'hold', e: '💐',           n: 'ช่อดอกไม้',     say: 'ช่อดอกไม้ให้คุณแม่ค่ะ' }
+  { k: 'Crown',   cat: 'hat',  e: '👑',           n: { th: 'มงกุฎ', en: 'Crown' },        say: { th: 'มงกุฎสวยจังเลยค่ะ เหมือนเจ้าหญิงเลย', en: 'Sparkling princess crown! So pretty!' } },
+  { k: 'Chef',    cat: 'hat',  e: ICONS.chef,     n: { th: 'หมวกเชฟ', en: 'Chef Hat' },      say: { th: 'หมวกเชฟค่ะ วันนี้ทำขนมอร่อย ๆ กันนะคะ', en: 'Little chef hat! Let us bake yummy treats!' } },
+  { k: 'Party',   cat: 'hat',  e: '🎉',           n: { th: 'หมวกปาร์ตี้', en: 'Party Hat' },   say: { th: 'หมวกปาร์ตี้ค่ะ ฉลองกันเลย', en: 'Party hat! Let us celebrate!' } },
+  { k: 'Cap',     cat: 'hat',  e: ICONS.cap,      n: { th: 'หมวกแก๊ป', en: 'Cap' },      say: { th: 'หมวกแก๊ปสีฟ้า เท่จังเลยค่ะ', en: 'Cool blue baseball cap! Looking sporty!' } },
+  { k: 'Wizard',  cat: 'hat',  e: ICONS.wizard,   n: { th: 'หมวกพ่อมด', en: 'Wizard Hat' },    say: { th: 'หมวกพ่อมดค่ะ ซิมซาลาบิม เสกขนมออกมาเลย', en: 'Magic wizard hat! Simzalabim, make a wish!' } },
+  { k: 'Flower',  cat: 'hat',  e: '🌸',           n: { th: 'ติดดอกไม้', en: 'Flower' },     say: { th: 'ดอกไม้สวยจังเลย หอมด้วยนะคะ', en: 'Pink flower clip! Smells so sweet!' } },
+  { k: 'Glasses', cat: 'face', e: '👓',           n: { th: 'แว่นตา', en: 'Glasses' },        say: { th: 'ใส่แว่นแล้วดูฉลาดเลยค่ะ', en: 'Round glasses! Looking so smart!' } },
+  { k: 'Shades',  cat: 'face', e: '😎',           n: { th: 'แว่นกันแดด', en: 'Sunglasses' },    say: { th: 'แว่นกันแดด เท่สุด ๆ ไปเลยค่ะ', en: 'Cool sunglasses! Super stylish!' } },
+  { k: 'HeartGlasses', cat: 'face', e: '😍',      n: { th: 'แว่นหัวใจ', en: 'Heart Glasses' },     say: { th: 'แว่นหัวใจ น่ารักที่สุดเลยค่ะ', en: 'Heart glasses! So cute and sweet!' } },
+  { k: 'Mustache', cat: 'face', e: ICONS.mustache, n: { th: 'หนวด', en: 'Mustache' },        say: { th: 'ฮ่า ฮ่า หนวดเท่ ๆ เหมือนคุณลุงเลยค่ะ', en: 'Haha, a funny gentleman mustache!' } },
+  { k: 'Sticker', cat: 'face', e: '⭐',           n: { th: 'สติกเกอร์แก้ม', en: 'Cheek Star' }, say: { th: 'สติกเกอร์ดาวกับหัวใจที่แก้ม น่ารักจัง', en: 'Star sticker on cheeks! So cute!' } },
+  { k: 'Phones',  cat: 'face', e: '🎧',           n: { th: 'หูฟัง', en: 'Headphones' },         say: { th: 'ใส่หูฟัง ฟังเพลงเพราะ ๆ กันค่ะ', en: 'Cute headphones! Listening to fun music!' } },
+  { k: 'Scarf',   cat: 'body', e: ICONS.scarf,    n: { th: 'ผ้าพันคอ', en: 'Warm Scarf' },      say: { th: 'ผ้าพันคอ อุ่นสบายเลยค่ะ', en: 'Warm red scarf! Nice and cozy!' } },
+  { k: 'Bowtie',  cat: 'body', e: '🎀',           n: { th: 'โบว์ผูกคอ', en: 'Bowtie' },     say: { th: 'โบว์ผูกคอสีม่วง ดูเป็นสุภาพบุรุษเลยค่ะ', en: 'Purple bowtie! Very classy!' } },
+  { k: 'Necklace', cat: 'body', e: ICONS.necklace, n: { th: 'สร้อยไข่มุก', en: 'Pearl Necklace' },  say: { th: 'สร้อยไข่มุกสวยแวววาวเลยค่ะ', en: 'Shiny pearl necklace! So elegant!' } },
+  { k: 'Apron',   cat: 'body', e: ICONS.apron,    n: { th: 'ผ้ากันเปื้อน', en: 'Shop Apron' },  say: { th: 'ผ้ากันเปื้อน พร้อมขายของแล้วค่ะ', en: 'Shopkeeper apron! Ready to serve customers!' } },
+  { k: 'Cape',    cat: 'body', e: ICONS.cape,     n: { th: 'ผ้าคลุมฮีโร่', en: 'Hero Cape' },  say: { th: 'ผ้าคลุมซุปเปอร์ฮีโร่ บินได้เลยนะคะ ฟิ้วว', en: 'Superhero cape! Ready to fly, whoosh!' } },
+  { k: 'Wings',   cat: 'body', e: ICONS.wings,    n: { th: 'ปีกนางฟ้า', en: 'Fairy Wings' },     say: { th: 'ปีกนางฟ้า กระพือปีกได้ด้วยนะคะ', en: 'Fairy wings! Flap flap flap!' } },
+  { k: 'Wand',    cat: 'hold', e: '✨',           n: { th: 'ไม้กายสิทธิ์', en: 'Magic Wand' },   say: { th: 'ไม้กายสิทธิ์ค่ะ วิบ วิบ เสกให้เลย', en: 'Magic wand! Sparkle sparkle magic!' } },
+  { k: 'Balloon', cat: 'hold', e: '🎈',           n: { th: 'ลูกโป่ง', en: 'Balloon' },       say: { th: 'ลูกโป่งสีแดง ลอยสูงเลยค่ะ', en: 'Red balloon! Flying high in the sky!' } },
+  { k: 'Lollipop', cat: 'hold', e: '🍭',          n: { th: 'อมยิ้มยักษ์', en: 'Giant Lollipop' },   say: { th: 'อมยิ้มใหญ่มาก หวานจัง', en: 'Giant rainbow lollipop! Super sweet!' } },
+  { k: 'Bouquet', cat: 'hold', e: '💐',           n: { th: 'ช่อดอกไม้', en: 'Flower Bouquet' },     say: { th: 'ช่อดอกไม้ให้คุณแม่ค่ะ', en: 'Flower bouquet for Mommy! So lovely!' } }
 ];
+
 const ACCS = DRESS.map(d => d.k);
-// only one item per slot (hats, eyewear, neckwear, hand-held, back items)
 const SLOTS = [
   ['Crown', 'Chef', 'Party', 'Cap', 'Wizard'],
   ['Glasses', 'Shades', 'HeartGlasses'],
@@ -1088,19 +1335,25 @@ const SLOTS = [
   ['Cape', 'Wings']
 ];
 const SOLO = ['Flower', 'Phones', 'Mustache', 'Sticker', 'Apron'];
-const ACC_SAY = { none: 'กลับมาเป็นน้องนิดาตัวเดิมแล้วค่ะ', random: 'ชุดใหม่แล้วค่ะ สวยไหมคะ' };
-DRESS.forEach(d => { ACC_SAY[d.k] = d.say; });
+
+function getAccSay(key) {
+  if (key === 'none') return currentLang === 'en' ? "Back to original cute Nida!" : 'กลับมาเป็นน้องนิดาตัวเดิมแล้วค่ะ';
+  if (key === 'random') return currentLang === 'en' ? "New outfit! Looking so pretty!" : 'ชุดใหม่แล้วค่ะ สวยไหมคะ';
+  const found = DRESS.find(d => d.k === key);
+  return found ? getItemTalk(found) : '';
+}
 
 const DRESS_COLORS = {
-  pink:    { n: 'ชมพู',  stops: ['#ffb3cf', '#ff8bb5'], belt: '#ff6fa3', css: '#ff8bb5' },
-  blue:    { n: 'ฟ้า',   stops: ['#a8dcff', '#6bb8ff'], belt: '#3f8fe8', css: '#6bb8ff' },
-  purple:  { n: 'ม่วง',  stops: ['#d6b8ff', '#b58cff'], belt: '#8f5cf0', css: '#b58cff' },
-  yellow:  { n: 'เหลือง', stops: ['#fff0a0', '#ffd84d'], belt: '#ffb100', css: '#ffd84d' },
-  green:   { n: 'เขียว', stops: ['#b6f0cf', '#6fdca4'], belt: '#2fbf7e', css: '#6fdca4' },
-  red:     { n: 'แดง',   stops: ['#ffb0b0', '#ff7070'], belt: '#e84040', css: '#ff7070' },
-  rainbow: { n: 'สายรุ้ง', stops: ['#ff6b6b', '#ffb347', '#ffe14d', '#6fdca4', '#5ab4ff', '#b58cff'], belt: '#ff5c8a',
+  pink:    { n: { th: 'ชมพู', en: 'Pink' },  stops: ['#ffb3cf', '#ff8bb5'], belt: '#ff6fa3', css: '#ff8bb5' },
+  blue:    { n: { th: 'ฟ้า', en: 'Blue' },   stops: ['#a8dcff', '#6bb8ff'], belt: '#3f8fe8', css: '#6bb8ff' },
+  purple:  { n: { th: 'ม่วง', en: 'Purple' },  stops: ['#d6b8ff', '#b58cff'], belt: '#8f5cf0', css: '#b58cff' },
+  yellow:  { n: { th: 'เหลือง', en: 'Yellow' }, stops: ['#fff0a0', '#ffd84d'], belt: '#ffb100', css: '#ffd84d' },
+  green:   { n: { th: 'เขียว', en: 'Green' }, stops: ['#b6f0cf', '#6fdca4'], belt: '#2fbf7e', css: '#6fdca4' },
+  red:     { n: { th: 'แดง', en: 'Red' },   stops: ['#ffb0b0', '#ff7070'], belt: '#e84040', css: '#ff7070' },
+  rainbow: { n: { th: 'สายรุ้ง', en: 'Rainbow' }, stops: ['#ff6b6b', '#ffb347', '#ffe14d', '#6fdca4', '#5ab4ff', '#b58cff'], belt: '#ff5c8a',
              css: 'linear-gradient(135deg,#ff6b6b,#ffe14d,#6fdca4,#5ab4ff,#b58cff)' }
 };
+
 let outfit = {};
 try { outfit = JSON.parse(localStorage.getItem('nida_outfit') || '{}') || {}; } catch(e){}
 let dressColor = 'pink';
@@ -1117,6 +1370,7 @@ function applyOutfit() {
   });
   try { localStorage.setItem('nida_outfit', JSON.stringify(outfit)); } catch(e){}
 }
+
 function applyDressColor() {
   const c = DRESS_COLORS[dressColor]; if (!c) return;
   const g = $('dressG');
@@ -1128,6 +1382,7 @@ function applyDressColor() {
   });
   try { localStorage.setItem('nida_dress_color', dressColor); } catch(e){}
 }
+
 function randomOutfit() {
   outfit = {};
   SLOTS.forEach(slot => { if (Math.random() < 0.7) outfit[slot[Math.floor(Math.random() * slot.length)]] = true; });
@@ -1136,6 +1391,7 @@ function randomOutfit() {
   const keys = Object.keys(DRESS_COLORS);
   dressColor = keys[Math.floor(Math.random() * keys.length)];
 }
+
 function toggleAcc(a) {
   ensureVector(); getAudioContext();
   const turningOn = !outfit[a];
@@ -1144,8 +1400,9 @@ function toggleAcc(a) {
   if (turningOn && (a === 'Wand' || a === 'Wings')) SoundFX.sparkle(); else SoundFX.boing();
   if (turningOn) launchConfetti(10);
   applyOutfit();
-  speakText(turningOn ? ACC_SAY[a] : 'ถอดออกแล้วค่ะ');
+  speakText(turningOn ? getAccSay(a) : (currentLang === 'en' ? 'Item removed!' : 'ถอดออกแล้วค่ะ'));
 }
+
 function showDressCat(cat) {
   dressCat = cat;
   document.querySelectorAll('#dressCats .cat-chip').forEach(b => {
@@ -1155,49 +1412,55 @@ function showDressCat(cat) {
   $('dressGrid').hidden = cat === 'color';
   $('colorGrid').hidden = cat !== 'color';
 }
+
 function buildDressUI() {
   const cats = $('dressCats'), grid = $('dressGrid'), colors = $('colorGrid');
+  if (!cats || !grid || !colors) return;
+  cats.innerHTML = '';
+  grid.innerHTML = '';
+  colors.innerHTML = '';
+
   DRESS_CATS.forEach(c => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'cat-chip'; b.dataset.cat = c.k; b.setAttribute('role', 'tab');
-    b.innerHTML = `<span>${c.icon}</span><span>${c.name}</span>`;
+    b.innerHTML = `<span>${c.icon}</span><span>${getItemName(c)}</span>`;
     b.addEventListener('click', () => { getAudioContext(); SoundFX.boing(); showDressCat(c.k); });
     cats.appendChild(b);
   });
+
   DRESS.forEach(d => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'dress-card'; b.dataset.acc = d.k; b.dataset.cat = d.cat; b.setAttribute('aria-pressed', 'false');
-    b.innerHTML = `<span class="dress-emoji">${d.e}</span>${d.n}`;
+    b.innerHTML = `<span class="dress-emoji">${d.e}</span>${getItemName(d)}`;
     b.addEventListener('click', () => toggleAcc(d.k));
     grid.appendChild(b);
   });
+
   Object.entries(DRESS_COLORS).forEach(([k, c]) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'swatch'; b.dataset.color = k; b.setAttribute('aria-pressed', 'false');
-    b.innerHTML = `<i style="background:${c.css}"></i>${c.n}`;
+    const colName = getItemName(c);
+    b.innerHTML = `<i style="background:${c.css}"></i>${colName}`;
     b.addEventListener('click', () => {
       ensureVector(); getAudioContext();
       dressColor = k; applyDressColor(); SoundFX.boing(); launchConfetti(12);
-      speakText(`ชุดสี${c.n} สวยจังเลยค่ะ`);
+      speakText(currentLang === 'en' ? `${colName} dress! Looks so lovely!` : `ชุดสี${colName} สวยจังเลยค่ะ`);
     });
     colors.appendChild(b);
   });
+
   document.querySelectorAll('.dress-actions [data-acc]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
       ensureVector(); getAudioContext();
       const a = btn.dataset.acc;
       if (a === 'none') { outfit = {}; dressColor = 'pink'; SoundFX.boing(); }
       else { randomOutfit(); SoundFX.fanfare(); launchConfetti(30); }
       applyOutfit(); applyDressColor();
-      speakText(ACC_SAY[a]);
-    });
+      speakText(getAccSay(a));
+    };
   });
   showDressCat(dressCat);
 }
-buildDressUI();
-applyOutfit();
-applyDressColor();
-renderStars();
 
 function clearCart() {
   if (cart.length === 0) return;
@@ -1205,30 +1468,68 @@ function clearCart() {
   cart = [];
   updateCartDisplay();
   checkQuest();
-  speakText("เริ่มเลือกรอบใหม่กันเลยค่ะ");
+  speakText(currentLang === 'en' ? "Cart cleared! Let's choose new goodies!" : "เริ่มเลือกรอบใหม่กันเลยค่ะ");
 }
 
 /* ============================================================
    5. FEEDING THE BUNNY
    ============================================================ */
 const TREATS = [
-  { name: 'แครอท', icon: ICONS.carrot, talk: 'ง่ำ ๆๆๆ แครอทกรุบกรอบ อร่อยชื่นใจที่สุดเลย!' },
-  { name: 'สตรอว์เบอร์รี', icon: '🍓', talk: 'ง่ำ ๆ หวานฉ่ำ สดชื่นมาก ขอบคุณนะคะหนู!' },
-  { name: 'เค้กหวาน', icon: '🍰', talk: 'ว้าว เค้กนุ่มละมุนลิ้น ฟินที่สุดเลยค่ะ!' },
-  { name: 'ไอศกรีม', icon: '🍦', talk: 'เย็นเจี๊ยบ หวานหอม อร่อยชื่นใจจัง!' },
-  { name: 'แอปเปิ้ล', icon: '🍎', talk: 'กรุบกรอบ วิตามินซีเต็มเปี่ยมเลยค่ะ!' },
-  { name: 'คุกกี้', icon: '🍪', talk: 'คุกกี้หอมเนยมาก ๆ ขอน้องนิดากินอีกชิ้นนะคะ!' }
+  {
+    name: { th: 'แครอท', en: 'Carrot' }, icon: ICONS.carrot,
+    talk: {
+      th: 'ง่ำ ๆๆๆ แครอทกรุบกรอบ อร่อยชื่นใจที่สุดเลย!',
+      en: 'Munch munch munch! Crunchy carrot is so delicious!'
+    }
+  },
+  {
+    name: { th: 'สตรอว์เบอร์รี', en: 'Strawberry' }, icon: '🍓',
+    talk: {
+      th: 'ง่ำ ๆ หวานฉ่ำ สดชื่นมาก ขอบคุณนะคะหนู!',
+      en: 'Yum yum! Sweet and juicy strawberry! Thank you so much!'
+    }
+  },
+  {
+    name: { th: 'เค้กหวาน', en: 'Sweet Cake' }, icon: '🍰',
+    talk: {
+      th: 'ว้าว เค้กนุ่มละมุนลิ้น ฟินที่สุดเลยค่ะ!',
+      en: 'Wow, soft and delicious cake! Super yummy!'
+    }
+  },
+  {
+    name: { th: 'ไอศกรีม', en: 'Ice Cream' }, icon: '🍦',
+    talk: {
+      th: 'เย็นเจี๊ยบ หวานหอม อร่อยชื่นใจจัง!',
+      en: 'Cold and sweet ice cream! So refreshing!'
+    }
+  },
+  {
+    name: { th: 'แอปเปิ้ล', en: 'Red Apple' }, icon: '🍎',
+    talk: {
+      th: 'กรุบกรอบ วิตามินซีเต็มเปี่ยมเลยค่ะ!',
+      en: 'Crispy red apple! Full of healthy vitamins!'
+    }
+  },
+  {
+    name: { th: 'คุกกี้', en: 'Cookie' }, icon: '🍪',
+    talk: {
+      th: 'คุกกี้หอมเนยมาก ๆ ขอน้องนิดากินอีกชิ้นนะคะ!',
+      en: 'Buttery crispy cookie! Can Nida have one more please?'
+    }
+  }
 ];
 
 function renderFeedShelf() {
   const shelf = $('feedShelf');
+  if (!shelf) return;
   shelf.innerHTML = '';
   TREATS.forEach(t => {
+    const tName = getItemName(t);
     const item = document.createElement('div');
     item.className = 'feed-item';
     item.innerHTML = `
       <div class="prod-emoji">${t.icon}</div>
-      <span>ป้อน ${t.name}</span>
+      <span>${currentLang === 'en' ? 'Feed ' + tName : 'ป้อน ' + tName}</span>
     `;
     item.addEventListener('click', (e) => feedBunny(t, e));
     shelf.appendChild(item);
@@ -1248,7 +1549,7 @@ function feedBunny(treat, event) {
     startSpeakingState();
     launchConfetti(25);
     setTimeout(() => {
-      speakText(treat.talk, 1.48, 0.88);
+      speakText(getItemTalk(treat), 1.48, 0.88);
     }, 750);
   });
 }
@@ -1257,37 +1558,65 @@ function feedBunny(treat, event) {
    6. ROLEPLAY (1-4)
    ============================================================ */
 const T = {
-  1: [
-    "สวัสดีค่ะ ยินดีต้อนรับสู่ร้านน้องนิดานะคะ",
-    "สวัสดีจ้า เข้ามาเลือกของน่ารัก ๆ ได้เลยค่ะ",
-    "ฮัลโหล ยินดีต้อนรับนะคะ วันนี้มีของน่ารักเต็มร้านเลย"
-  ],
-  2: [
-    "รับอะไรเพิ่มอีกไหมคะ",
-    "อยากได้ขนมหรือของเล่นอีกชิ้นไหมเอ่ย",
-    "มีอะไรที่อยากเลือกเพิ่มอีกไหมคะ"
-  ],
-  3: [
-    "ชิ้นนี้ราคาเก้าสิบเก้าบาทค่ะ",
-    "ราคาเก้าสิบเก้าบาทนะคะ ขอบคุณค่ะ",
-    "ทั้งหมดเก้าสิบเก้าบาทค่ะ"
-  ],
-  4: [
-    "ขอบคุณมาก ๆ นะคะ แล้วแวะมาเล่นกันอีกนะ",
-    "ขอบคุณที่มาร้านน้องนิดาค่ะ บ๊ายบาย",
-    "เย้ ขอบคุณนะคะ ขอให้วันนี้เป็นวันที่สดใสค่ะ"
-  ]
+  1: {
+    th: [
+      "สวัสดีค่ะ ยินดีต้อนรับสู่ร้านน้องนิดานะคะ",
+      "สวัสดีจ้า เข้ามาเลือกของน่ารัก ๆ ได้เลยค่ะ",
+      "ฮัลโหล ยินดีต้อนรับนะคะ วันนี้มีของน่ารักเต็มร้านเลย"
+    ],
+    en: [
+      "Hello! Welcome to Nida's Shop!",
+      "Welcome! Come in and look at all the lovely treats!",
+      "Hi there! Welcome! We have so many goodies today!"
+    ]
+  },
+  2: {
+    th: [
+      "รับอะไรเพิ่มอีกไหมคะ",
+      "อยากได้ขนมหรือของเล่นอีกชิ้นไหมเอ่ย",
+      "มีอะไรที่อยากเลือกเพิ่มอีกไหมคะ"
+    ],
+    en: [
+      "What would you like to buy today?",
+      "Would you like some sweet treats or toys?",
+      "Can I help you find something special?"
+    ]
+  },
+  3: {
+    th: [
+      "ชิ้นนี้ราคาเก้าสิบเก้าบาทค่ะ",
+      "ราคาเก้าสิบเก้าบาทนะคะ ขอบคุณค่ะ",
+      "ทั้งหมดเก้าสิบเก้าบาทค่ะ"
+    ],
+    en: [
+      "This is ninety-nine Baht, please!",
+      "The price is ninety-nine Baht, thank you!",
+      "That will be ninety-nine Baht!"
+    ]
+  },
+  4: {
+    th: [
+      "ขอบคุณมาก ๆ นะคะ แล้วแวะมาเล่นกันอีกนะ",
+      "ขอบคุณที่มาร้านน้องนิดาค่ะ บ๊ายบาย",
+      "เย้ ขอบคุณนะคะ ขอให้วันนี้เป็นวันที่สดใสค่ะ"
+    ],
+    en: [
+      "Thank you so much! Please come and play again soon!",
+      "Thank you for shopping at Nida's Shop! Bye bye!",
+      "Hooray! Thank you! Have a bright and wonderful day!"
+    ]
+  }
 };
 
 function sayRoleplay(k) {
   if (!T[k]) return;
   currentAction = Number(k);
-  const options = T[k];
-  const text = options[Math.floor(Math.random() * options.length)];
+  const group = T[k][currentLang] || T[k]['th'];
+  const text = group[Math.floor(Math.random() * group.length)];
   $('stage').className = 'stage act-' + currentAction;
-  if (k === 1) SoundFX.boing();
-  if (k === 3) SoundFX.cashRegister();
-  if (k === 4) { SoundFX.fanfare(); launchConfetti(30); }
+  if (k === '1' || k === 1) SoundFX.boing();
+  if (k === '3' || k === 3) SoundFX.cashRegister();
+  if (k === '4' || k === 4) { SoundFX.fanfare(); launchConfetti(30); }
   speakText(text);
 }
 
@@ -1296,27 +1625,45 @@ function sayRoleplay(k) {
    ============================================================ */
 const MOODS = {
   happy: {
-    lines: ["เย้! ดีใจที่ได้เจอหนูค่ะ", "น้องนิดามีความสุขจังเลย!", "ว้าว วันนี้สดใสจังเลยค่ะ"],
+    lines: {
+      th: ["เย้! ดีใจที่ได้เจอหนูค่ะ", "น้องนิดามีความสุขจังเลย!", "ว้าว วันนี้สดใสจังเลยค่ะ"],
+      en: ["Yay! So happy to see you!", "Nida is full of happiness today!", "What a wonderful bright day!"]
+    },
     sound: () => { SoundFX.giggle(); launchConfetti(25); }
   },
   laugh: {
-    lines: ["ฮิฮิฮิ ตลกจังเลยค่ะ", "คิกคิก น้องนิดาขำแล้ว!", "ฮ่า ฮ่า ฮ่า สนุกจังเลย"],
+    lines: {
+      th: ["ฮิฮิฮิ ตลกจังเลยค่ะ", "คิกคิก น้องนิดาขำแล้ว!", "ฮ่า ฮ่า ฮ่า สนุกจังเลย"],
+      en: ["Hehehe, that is so funny!", "Giggle giggle, Nida is laughing!", "Ha ha ha, so much fun!"]
+    },
     sound: () => SoundFX.giggle()
   },
   surprise: {
-    lines: ["โอ๊ะ! มีอะไรเอ่ย", "ว้าว! น้องนิดาตกใจเลยค่ะ", "อุ๊ย! นั่นอะไรนะคะ"],
+    lines: {
+      th: ["โอ๊ะ! มีอะไรเอ่ย", "ว้าว! น้องนิดาตกใจเลยค่ะ", "อุ๊ย! นั่นอะไรนะคะ"],
+      en: ["Oh! What is that?", "Wow! Nida was surprised!", "Ooh, look at that!"]
+    },
     sound: () => SoundFX.boing()
   },
   sleepy: {
-    lines: ["หาววว น้องนิดาง่วงแล้วค่ะ", "ขอพักตาสักแป๊บนะคะ", "ฝันดีนะคะ หาววว"],
+    lines: {
+      th: ["หาววว น้องนิดาง่วงแล้วค่ะ", "ขอพักตาสักแป๊บนะคะ", "ฝันดีนะคะ หาววว"],
+      en: ["Yaaawn, Nida is getting sleepy...", "Time for a little rest... Good night!", "Sweet dreams, yaaawn..."]
+    },
     sound: () => SoundFX.boing()
   },
   dance: {
-    lines: ["ดุ๊กดิ๊ก ดุ๊กดิ๊ก เต้นระบำกันเถอะ!", "ลั้ลลา มาขยับตัวด้วยกันนะคะ", "โยกซ้าย โยกขวา สนุกจังเลย!"],
+    lines: {
+      th: ["ดุ๊กดิ๊ก ดุ๊กดิ๊ก เต้นระบำกันเถอะ!", "ลั้ลลา มาขยับตัวด้วยกันนะคะ", "โยกซ้าย โยกขวา สนุกจังเลย!"],
+      en: ["Wiggle wiggle, let's dance together!", "La la la, time to dance and bounce!", "Dance to the left, dance to the right!"]
+    },
     sound: () => { SoundFX.fanfare(); launchConfetti(35); }
   },
   praise: {
-    lines: ["หนูนิดาเก่งที่สุดในโลกเลยค่ะ!", "คนเก่งของพ่อกับแม่ ยอดเยี่ยมมาก!", "ปรบมือให้คนเก่งเลยค่ะ แปะ แปะ แปะ!"],
+    lines: {
+      th: ["หนูนิดาเก่งที่สุดในโลกเลยค่ะ!", "คนเก่งของพ่อกับแม่ ยอดเยี่ยมมาก!", "ปรบมือให้คนเก่งเลยค่ะ แปะ แปะ แปะ!"],
+      en: ["You are the superstar of the whole world!", "Mom and Dad's superstar, wonderful job!", "Clap clap clap for the clever superstar!"]
+    },
     sound: () => { SoundFX.fanfare(); launchConfetti(45); }
   }
 };
@@ -1326,7 +1673,8 @@ function reactMood(moodKey) {
   if (!m) return;
   $('stage').className = 'stage mood-' + moodKey;
   if (m.sound) m.sound();
-  const text = m.lines[Math.floor(Math.random() * m.lines.length)];
+  const group = m.lines[currentLang] || m.lines['th'];
+  const text = group[Math.floor(Math.random() * group.length)];
   const pitch = moodKey === 'sleepy' ? 1.05 : 1.48;
   const rate = moodKey === 'sleepy' ? 0.72 : 0.9;
   speakText(text, pitch, rate);
@@ -1358,11 +1706,17 @@ $('bunnyHead').addEventListener('click', (e) => {
     earR.style.transform = 'rotate(12deg)';
     setTimeout(() => { earL.style.transform = ''; earR.style.transform = ''; }, 1200);
   }
-  const lines = [
+  const linesTH = [
     "อื้มมม ลูบหัวแล้วสบายจังเลยค่ะ เคลิ้มเลย",
     "งืมมม รักหนูที่สุดเลย ลูบหัวน้องนิดาอีกนะคะ",
     "น้องนิดาชอบให้ลูบหัวที่สุดเลยค่ะ มีความสุขจัง"
   ];
+  const linesEN = [
+    "Mmm, gentle head pats feel so nice and cozy!",
+    "Aww, I love you so much! Please pat my head again!",
+    "Nida loves head pats the most! So happy and sweet!"
+  ];
+  const lines = currentLang === 'en' ? linesEN : linesTH;
   speakText(lines[Math.floor(Math.random() * lines.length)], 1.5, 0.88);
 });
 
@@ -1372,7 +1726,7 @@ $('bunnyNose').addEventListener('click', (e) => {
   SoundFX.sneeze();
   $('stage').className = 'stage mood-sneeze';
   launchConfetti(25);
-  speakText("ฮัดเช้ยยย! จมูกคันจังเลยค่ะหนู 💨", 1.6, 0.95);
+  speakText(currentLang === 'en' ? "Achoooo! My bunny nose is so ticklish! 💨" : "ฮัดเช้ยยย! จมูกคันจังเลยค่ะหนู 💨", 1.6, 0.95);
   setTimeout(() => { $('stage').className = 'stage'; }, 1000);
 });
 
@@ -1381,24 +1735,32 @@ $('bunnyTummy').addEventListener('click', (e) => {
   getAudioContext();
   SoundFX.giggle();
   $('stage').className = 'stage mood-laugh';
-  speakText("คิกคิก อย่าจั๊กจี้พุงนิดาสิคะหนู!", 1.55);
+  speakText(currentLang === 'en' ? "Hehehe, don't tickle Nida's tummy, it tickles so much!" : "คิกคิก อย่าจั๊กจี้พุงนิดาสิคะหนู!", 1.55);
 });
 
 $('stage').addEventListener('click', () => {
   getAudioContext();
   SoundFX.boing();
   launchConfetti(20);
-  const hellos = [
+  const hellosTH = [
     "สวัสดีค่ะ ดีใจที่หนูมาเล่นกับน้องนิดานะคะ 💕",
     "เย้ กอดกอดกันค่ะ วันนี้เล่นอะไรกันดีเอ่ย",
     "รักหนูจังเลย มาเล่นขายของด้วยกันต่อนะคะ"
   ];
+  const hellosEN = [
+    "Hello sweetie! So happy you came to play with Nida! 💕",
+    "Yay, big warm hugs! What shall we play today?",
+    "I love you so much! Let's play shopkeeper together!"
+  ];
+  const hellos = currentLang === 'en' ? hellosEN : hellosTH;
   speakText(hellos[Math.floor(Math.random() * hellos.length)]);
 });
 
 $('soundToggle').addEventListener('click', () => {
   soundEnabled = !soundEnabled;
-  $('soundToggle').innerHTML = soundEnabled ? '🔊<span class="lbl"> เสียงเปิด</span>' : '🔇<span class="lbl"> ปิดเสียง</span>';
+  $('soundToggle').innerHTML = soundEnabled 
+    ? (currentLang === 'en' ? '🔊<span class="lbl"> Sound On</span>' : '🔊<span class="lbl"> เสียงเปิด</span>')
+    : (currentLang === 'en' ? '🔇<span class="lbl"> Muted</span>' : '🔇<span class="lbl"> ปิดเสียง</span>');
 });
 
 $('replayBubble').addEventListener('click', (e) => {
@@ -1427,7 +1789,7 @@ $('scaleAddBtn').addEventListener('click', addScaleItemToCart);
 $('questRerollBtn').addEventListener('click', () => {
   SoundFX.boing();
   newQuest();
-  speakText("เปลี่ยนรายการของใหม่แล้วค่ะ ลองดูนะคะว่าอยากได้อะไร");
+  speakText(currentLang === 'en' ? "Here is a new quest! Let's see what we need!" : "เปลี่ยนรายการของใหม่แล้วค่ะ ลองดูนะคะว่าอยากได้อะไร");
 });
 
 document.querySelectorAll('.shop-cat-btn').forEach(btn => {
@@ -1500,10 +1862,10 @@ installBtn.addEventListener('click', async () => {
 function updateOnlineStatus() {
   const pill = $('offlinePill');
   if (navigator.onLine) {
-    pill.innerHTML = '<span class="status-dot"></span><span class="lbl"> ออนไลน์</span>';
+    pill.innerHTML = `<span class="status-dot"></span><span class="lbl"> ${currentLang === 'en' ? 'Online' : 'ออนไลน์'}</span>`;
     pill.style.borderColor = 'rgba(62, 201, 146, 0.4)';
   } else {
-    pill.innerHTML = '<span class="status-dot offline"></span><span class="lbl"> ออฟไลน์</span>';
+    pill.innerHTML = `<span class="status-dot offline"></span><span class="lbl"> ${currentLang === 'en' ? 'Offline' : 'ออฟไลน์'}</span>`;
     pill.style.borderColor = 'rgba(255, 158, 44, 0.4)';
   }
 }
@@ -1525,10 +1887,9 @@ if ('serviceWorker' in navigator) {
 }
 
 /* ============================================================
-   10. FUN TAB (v2.9): balloons, piano, birthday, photo, scenes, counting
+   10. FUN TAB: balloons, piano, birthday, photo, scenes, counting
    ============================================================ */
 Object.assign(SoundFX, {
-  // one soft bell-like note (used by piano, birthday song, counting)
   note(freq, dur = 0.3, vol = 0.22) {
     if (!soundEnabled) return;
     const ctx = getAudioContext(); if (!ctx) return;
@@ -1543,7 +1904,6 @@ Object.assign(SoundFX, {
       osc.start(t0); osc.stop(t0 + dur + 0.2);
     });
   },
-  // balloon pop
   pop() {
     if (!soundEnabled) return;
     const ctx = getAudioContext(); if (!ctx) return;
@@ -1559,7 +1919,6 @@ Object.assign(SoundFX, {
     og.gain.setValueAtTime(0.3, ctx.currentTime); og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
     o.connect(og); og.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.11);
   },
-  // camera shutter
   shutter() {
     if (!soundEnabled) return;
     const ctx = getAudioContext(); if (!ctx) return;
@@ -1573,25 +1932,25 @@ Object.assign(SoundFX, {
       src.connect(bp); bp.connect(g); g.connect(ctx.destination); src.start(ctx.currentTime + off);
     });
   },
-  // magic sparkle
   sparkle() {
     [1318.5, 1568, 1760, 2093, 2637].forEach((f, i) => setTimeout(() => SoundFX.note(f, 0.1, 0.14), i * 70));
   }
 });
 
 const TH_NUM = ['หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า', 'สิบ'];
+const EN_NUM = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
 const rand = (a, b) => a + Math.random() * (b - a);
 
 /* ---- Scenes ---- */
 const SCENES = {
-  sunny:  { icon: '🌈', n: 'วันสดใส',    say: 'วันนี้อากาศดีจังเลยค่ะ ท้องฟ้าสดใส', bg: ['#fff9e6', '#fde492'], deco: [], photo: ['⭐', '✨', '💖', '🌈'] },
-  night:  { icon: '🌙', n: 'กลางคืน',    say: 'กลางคืนแล้วค่ะ ดาวเต็มท้องฟ้าเลย', bg: ['#232a6b', '#8a6fc4'],
+  sunny:  { icon: '🌈', n: { th: 'วันสดใส', en: 'Sunny Day' },    say: { th: 'วันนี้อากาศดีจังเลยค่ะ ท้องฟ้าสดใส', en: 'What a sunny, lovely day! Clear blue skies!' }, bg: ['#fff9e6', '#fde492'], deco: [], photo: ['⭐', '✨', '💖', '🌈'] },
+  night:  { icon: '🌙', n: { th: 'กลางคืน', en: 'Starry Night' },    say: { th: 'กลางคืนแล้วค่ะ ดาวเต็มท้องฟ้าเลย', en: 'It is nighttime! The sky is full of stars!' }, bg: ['#232a6b', '#8a6fc4'],
             deco: [['🌙', 'right:8%;top:7%'], ['⭐', 'left:8%;top:10%'], ['✨', 'left:34%;top:3%'], ['✨', 'right:28%;top:20%'], ['⭐', 'left:5%;bottom:14%']] },
-  beach:  { icon: '🌴', n: 'ชายหาด',    say: 'ไปเที่ยวทะเลกันค่ะ คลื่นซัดฟู่ ๆ', bg: ['#8fd8ff', '#ffd27a'],
+  beach:  { icon: '🌴', n: { th: 'ชายหาด', en: 'Sunny Beach' },    say: { th: 'ไปเที่ยวทะเลกันค่ะ คลื่นซัดฟู่ ๆ', en: 'Let us go to the beach! Splish splash waves!' }, bg: ['#8fd8ff', '#ffd27a'],
             deco: [['☀️', 'right:7%;top:6%'], ['🌴', 'left:4%;top:20%'], ['🐚', 'right:8%;bottom:8%'], ['🌊', 'left:8%;bottom:6%']] },
-  garden: { icon: '🌷', n: 'สวนดอกไม้',  say: 'สวนดอกไม้สวยจังเลยค่ะ มีผีเสื้อด้วย', bg: ['#d4f6ff', '#8fe39a'],
+  garden: { icon: '🌷', n: { th: 'สวนดอกไม้', en: 'Flower Garden' },  say: { th: 'สวนดอกไม้สวยจังเลยค่ะ มีผีเสื้อด้วย', en: 'The flower garden is so beautiful with butterflies!' }, bg: ['#d4f6ff', '#8fe39a'],
             deco: [['🌸', 'right:9%;top:12%'], ['🌷', 'left:6%;bottom:8%'], ['🌳', 'right:3%;bottom:10%'], ['🌼', 'left:24%;bottom:4%']] },
-  snow:   { icon: '⛄', n: 'หิมะตก',     say: 'หิมะตกแล้วค่ะ หนาวจัง บรื๋ออ', bg: ['#cfe9ff', '#ffffff'], snow: true,
+  snow:   { icon: '⛄', n: { th: 'หิมะตก', en: 'Snowy Day' },     say: { th: 'หิมะตกแล้วค่ะ หนาวจัง บรื๋ออ', en: 'It is snowing! Brrr, so cool and snowy!' }, bg: ['#cfe9ff', '#ffffff'], snow: true,
             deco: [['⛄', 'right:5%;bottom:8%'], ['🌲', 'left:4%;bottom:10%']] }
 };
 const SCENE_ORDER = ['sunny', 'night', 'beach', 'garden', 'snow'];
@@ -1619,12 +1978,13 @@ function setScene(key) {
   $('sceneIcon').textContent = sc.icon;
   try { localStorage.setItem('nida_scene', key); } catch(e){}
 }
+
 function nextScene() {
   const next = SCENE_ORDER[(SCENE_ORDER.indexOf(currentScene) + 1) % SCENE_ORDER.length];
   setScene(next);
   if (next === 'night') SoundFX.note(392, 0.5, 0.18); else SoundFX.boing();
   launchConfetti(14);
-  speakText(SCENES[next].say);
+  speakText(getItemTalk(SCENES[next]));
 }
 
 /* ---- Balloons: pop them in any order, bunny counts the number ---- */
@@ -1639,9 +1999,13 @@ function startBalloons() {
       stars++; try { localStorage.setItem('nida_stars', String(stars)); } catch(e){}
       renderStars();
       SoundFX.fanfare(); launchConfetti(70);
-      speakText('เก่งมากเลยค่ะ แตกครบสิบลูกแล้ว ได้ดาวเพิ่มอีกหนึ่งดวง!');
+      speakText(currentLang === 'en'
+        ? 'Great job! You popped all ten balloons! You get one bonus star!'
+        : 'เก่งมากเลยค่ะ แตกครบสิบลูกแล้ว ได้ดาวเพิ่มอีกหนึ่งดวง!');
     } else if (popped > 0) {
-      speakText('ลูกโป่งลอยไปหมดแล้วค่ะ เล่นอีกรอบไหมคะ');
+      speakText(currentLang === 'en'
+        ? 'The balloons flew away! Would you like to play again?'
+        : 'ลูกโป่งลอยไปหมดแล้วค่ะ เล่นอีกรอบไหมคะ');
     }
   };
   nums.forEach((n, i) => {
@@ -1658,7 +2022,6 @@ function startBalloons() {
       e.preventDefault(); if (gone) return; gone = true;
       getAudioContext();
       const r = el.getBoundingClientRect();
-      // freeze the balloon exactly where it is (removing the rise animation would snap it back to the bottom)
       const m = getComputedStyle(el).transform;
       const base = m && m !== 'none' ? m + ' ' : '';
       el.style.animation = 'none';
@@ -1666,17 +2029,18 @@ function startBalloons() {
       void el.offsetWidth;
       el.classList.add('pop');
       el.style.transform = base + 'scale(1.7)';
-      setTimeout(() => el.remove(), 450); // keep it in place a moment so the follow-up tap/click can't hit buttons underneath
+      setTimeout(() => el.remove(), 450);
       popped++;
       SoundFX.pop();
       launchConfetti(14, r.left + r.width / 2, r.top + r.height / 2);
-      speakText(`${n} ${TH_NUM[n - 1]}`, 1.5, 0.95);
+      const numName = currentLang === 'en' ? EN_NUM[n - 1] : TH_NUM[n - 1];
+      speakText(`${n} ${numName}`, 1.5, 0.95);
       finishOne();
     });
     el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
     layer.appendChild(el);
   });
-  speakText('แตะลูกโป่งให้แตก แล้วนับเลขไปด้วยกันนะคะ');
+  speakText(currentLang === 'en' ? 'Tap balloons to pop them and count numbers together!' : 'แตะลูกโป่งให้แตก แล้วนับเลขไปด้วยกันนะคะ');
 }
 
 /* ---- Piano ---- */
@@ -1686,7 +2050,7 @@ const PIANO_KEYS = [
 ];
 let pianoTimer = null;
 function buildPiano() {
-  const box = $('piano'); box.innerHTML = '';
+  const box = $('piano'); if (!box) return; box.innerHTML = '';
   PIANO_KEYS.forEach(([name, freq, color], i) => {
     const k = document.createElement('button');
     k.type = 'button'; k.className = 'pkey'; k.textContent = name; k.style.background = color;
@@ -1704,10 +2068,11 @@ function buildPiano() {
     box.appendChild(k);
   });
 }
+
 function openPiano() {
   $('panel-fun').classList.add('piano-open'); $('pianoWrap').hidden = false;
   SoundFX.note(523.25, 0.3, 0.2);
-  speakText('มาเล่นเปียโนกันค่ะ แตะที่คีย์ได้เลย โด เร มี ฟา ซอล ลา ที โด');
+  speakText(currentLang === 'en' ? 'Let us play piano! Do Re Mi Fa So La Ti Do!' : 'มาเล่นเปียโนกันค่ะ แตะที่คีย์ได้เลย โด เร มี ฟา ซอล ลา ที โด');
 }
 function closePiano() { const p = $('panel-fun'); if (p) p.classList.remove('piano-open'); const w = $('pianoWrap'); if (w) w.hidden = true; }
 $('pianoClose').addEventListener('click', () => { SoundFX.boing(); closePiano(); });
@@ -1727,31 +2092,33 @@ function playBirthdaySong() {
     setTimeout(next, beats * 420);
   })();
 }
+
 function openBirthday() {
   getAudioContext(); ensureVector();
   SLOTS[0].forEach(x => delete outfit[x]); outfit.Party = true; applyOutfit();
   candlesOut = false;
   $('candles').classList.remove('out');
-  $('cakeTitle').textContent = '🎶 วันเกิดน้องนิดา 🎶';
-  $('cakeHint').textContent = 'แตะที่เค้กเพื่อเป่าเทียน 💨';
+  $('cakeTitle').textContent = currentLang === 'en' ? "🎶 Nida's Birthday 🎶" : '🎶 วันเกิดน้องนิดา 🎶';
+  $('cakeHint').textContent = currentLang === 'en' ? 'Tap the cake to blow out candles 💨' : 'แตะที่เค้กเพื่อเป่าเทียน 💨';
   $('cakeOverlay').classList.add('show');
   $('stage').className = 'stage mood-dance';
-  $('bubble').textContent = '🎶 แฮปปี้เบิร์ธเดย์ทูยู 🎶';
+  $('bubble').textContent = currentLang === 'en' ? '🎶 Happy Birthday to You! 🎶' : '🎶 แฮปปี้เบิร์ธเดย์ทูยู 🎶';
   launchConfetti(30);
   playBirthdaySong();
 }
 function closeBirthday() { bdayToken++; $('cakeOverlay').classList.remove('show'); }
+
 function blowCandles() {
   if (candlesOut) return;
   candlesOut = true; bdayToken++;
   $('candles').classList.add('out');
   SoundFX.giggle(); setTimeout(SoundFX.fanfare, 250);
   launchConfetti(80);
-  $('cakeTitle').textContent = '🎉 สุขสันต์วันเกิด! 🎉';
-  $('cakeHint').textContent = 'เย้! เทียนดับแล้ว ขอพรได้เลย ✨';
+  $('cakeTitle').textContent = currentLang === 'en' ? '🎉 Happy Birthday! 🎉' : '🎉 สุขสันต์วันเกิด! 🎉';
+  $('cakeHint').textContent = currentLang === 'en' ? 'Hooray! Make a wish! ✨' : 'เย้! เทียนดับแล้ว ขอพรได้เลย ✨';
   stars++; try { localStorage.setItem('nida_stars', String(stars)); } catch(e){}
   renderStars();
-  speakText('สุขสันต์วันเกิดนะคะ ขอให้มีความสุขมาก ๆ เลยค่ะ');
+  speakText(currentLang === 'en' ? 'Happy Birthday! Wishing you lots of joy and smiles!' : 'สุขสันต์วันเกิดนะคะ ขอให้มีความสุขมาก ๆ เลยค่ะ');
   const t = bdayToken;
   setTimeout(() => { if (t === bdayToken && candlesOut) closeBirthday(); }, 4500);
 }
@@ -1775,15 +2142,16 @@ function drawPhoto(drawBunny) {
     x.beginPath(); x.roundRect ? x.roundRect(120, H - 130, W - 240, 84, 42) : x.rect(120, H - 130, W - 240, 84); x.fill();
     x.fillStyle = '#d93a7c'; x.textAlign = 'center';
     x.font = 'bold 40px Mali, Sarabun, sans-serif';
-    x.fillText(`ร้านน้องนิดา  ⭐ ${stars}`, W / 2, H - 76);
+    x.fillText(currentLang === 'en' ? `Nida's Shop  ⭐ ${stars}` : `ร้านน้องนิดา  ⭐ ${stars}`, W / 2, H - 76);
     return c.toDataURL('image/png');
   });
 }
+
 function takePhoto() {
   getAudioContext(); SoundFX.shutter();
   const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
   $('stage').className = 'stage mood-happy';
-  speakText('ชีส! ถ่ายรูปแล้วค่ะ');
+  speakText(currentLang === 'en' ? 'Say cheese! Taking a cute photo!' : 'ชีส! ถ่ายรูปแล้วค่ะ');
   const bunny = (x, W, H) => new Promise((res, rej) => {
     const img = new Image();
     img.onload = () => { x.drawImage(img, 40, 60, 640, 704); res(); };
@@ -1813,24 +2181,29 @@ let countToken = 0, lastCountText = '';
 function startCounting() {
   getAudioContext();
   const t = ++countToken;
-  const names = cart.length ? cart.slice(0, 10).map(p => p.name) : null;
+  const names = cart.length ? cart.slice(0, 10).map(p => getItemName(p)) : null;
   const n = names ? names.length : 10;
   const badge = $('countBadge');
   let i = 0;
   (function step() {
     if (t !== countToken) return;
-    if (i > 0 && currentText !== lastCountText) { badge.classList.remove('show'); return; } // someone else spoke → stop
+    if (i > 0 && currentText !== lastCountText) { badge.classList.remove('show'); return; }
     if (i >= n) {
       badge.classList.remove('show');
       SoundFX.fanfare(); launchConfetti(40);
-      speakText(names ? `ตะกร้ามีทั้งหมด ${cart.length} ชิ้นค่ะ` : 'นับถึงสิบแล้ว เก่งมากเลยค่ะ');
+      if (currentLang === 'en') {
+        speakText(names ? `Total ${cart.length} items in your basket!` : 'Counted to ten! You are super clever!');
+      } else {
+        speakText(names ? `ตะกร้ามีทั้งหมด ${cart.length} ชิ้นค่ะ` : 'นับถึงสิบแล้ว เก่งมากเลยค่ะ');
+      }
       return;
     }
     i++;
     badge.classList.remove('show'); void badge.offsetWidth;
     badge.textContent = i; badge.classList.add('show');
     SoundFX.note(PIANO_KEYS[(i - 1) % 8][1], 0.25, 0.22);
-    lastCountText = names ? `${TH_NUM[i - 1]} ${names[i - 1]}` : TH_NUM[i - 1];
+    const numName = currentLang === 'en' ? EN_NUM[i - 1] : TH_NUM[i - 1];
+    lastCountText = names ? `${numName} ${names[i - 1]}` : numName;
     speakText(lastCountText, 1.5, 0.9);
     $('stage').className = 'stage act-1';
     setTimeout(step, 1150);
@@ -1866,18 +2239,18 @@ $('receiptOverlay').addEventListener('click', (e) => {
    STICKER ALBUM SYSTEM
    ============================================================ */
 const STICKER_LIST = [
-  { id: 'star_gold', icon: '⭐', name: 'ดาวทอง' },
-  { id: 'crown', icon: '👑', name: 'มงกุฎ' },
-  { id: 'rainbow', icon: '🌈', name: 'สายรุ้ง' },
-  { id: 'heart', icon: '💖', name: 'หัวใจหวาน' },
-  { id: 'trophy', icon: '🏆', name: 'ถ้วยรางวัล' },
-  { id: 'unicorn', icon: '🦄', name: 'ยูนิคอร์น' },
-  { id: 'candy', icon: '🍭', name: 'อมยิ้ม' },
-  { id: 'cake', icon: '🎂', name: 'เค้กวันเกิด' },
-  { id: 'flower', icon: '🌸', name: 'ดอกไม้หอม' },
-  { id: 'balloon', icon: '🎈', name: 'ลูกโป่งแดง' },
-  { id: 'sparkles', icon: '✨', name: 'ประกายดาว' },
-  { id: 'gem', icon: '💎', name: 'เพชรวิบวับ' }
+  { id: 'star_gold', icon: '⭐', name: { th: 'ดาวทอง', en: 'Gold Star' } },
+  { id: 'crown', icon: '👑', name: { th: 'มงกุฎ', en: 'Crown' } },
+  { id: 'rainbow', icon: '🌈', name: { th: 'สายรุ้ง', en: 'Rainbow' } },
+  { id: 'heart', icon: '💖', name: { th: 'หัวใจหวาน', en: 'Sweet Heart' } },
+  { id: 'trophy', icon: '🏆', name: { th: 'ถ้วยรางวัล', en: 'Trophy' } },
+  { id: 'unicorn', icon: '🦄', name: { th: 'ยูนิคอร์น', en: 'Unicorn' } },
+  { id: 'candy', icon: '🍭', name: { th: 'อมยิ้ม', en: 'Lollipop' } },
+  { id: 'cake', icon: '🎂', name: { th: 'เค้กวันเกิด', en: 'Birthday Cake' } },
+  { id: 'flower', icon: '🌸', name: { th: 'ดอกไม้หอม', en: 'Sweet Flower' } },
+  { id: 'balloon', icon: '🎈', name: { th: 'ลูกโป่งแดง', en: 'Red Balloon' } },
+  { id: 'sparkles', icon: '✨', name: { th: 'ประกายดาว', en: 'Sparkles' } },
+  { id: 'gem', icon: '💎', name: { th: 'เพชรวิบวับ', en: 'Shiny Gem' } }
 ];
 
 let myStickers = {};
@@ -1890,17 +2263,20 @@ function renderStickerAlbum() {
   STICKER_LIST.forEach((s) => {
     const slot = document.createElement('div');
     const unlocked = !!myStickers[s.id];
+    const sName = getItemName(s);
     slot.className = 'sticker-slot ' + (unlocked ? 'unlocked' : 'locked');
-    slot.innerHTML = `<span>${s.icon}</span><span class="sticker-slot-name">${unlocked ? s.name : '???'}</span>`;
+    slot.innerHTML = `<span>${s.icon}</span><span class="sticker-slot-name">${unlocked ? sName : '???'}</span>`;
     slot.addEventListener('click', () => {
       getAudioContext();
       if (unlocked) {
         SoundFX.boing();
         launchConfetti(20);
-        speakText(`สติกเกอร์${s.name} น่ารักจังเลยค่ะ`);
+        speakText(currentLang === 'en' ? `${sName} sticker! So cute!` : `สติกเกอร์${sName} น่ารักจังเลยค่ะ`);
       } else {
         SoundFX.boing();
-        speakText(`สติกเกอร์นี้ยังล็อคอยู่ค่ะ ช่วยขายของหรือหมุนไข่เพื่อปลดล็อคนะคะ`);
+        speakText(currentLang === 'en' 
+          ? `This sticker is locked! Sell items or spin gachapon to unlock it!` 
+          : `สติกเกอร์นี้ยังล็อคอยู่ค่ะ ช่วยขายของหรือหมุนไข่เพื่อปลดล็อคนะคะ`);
       }
     });
     album.appendChild(slot);
@@ -1921,7 +2297,7 @@ function openStickerBook() {
   SoundFX.boing();
   renderStickerAlbum();
   $('stickerOverlay').classList.add('show');
-  speakText("นี่คือสมุดสติกเกอร์คนเก่งของน้องนิดาค่ะ สะสมให้ครบนะคะ!");
+  speakText(currentLang === 'en' ? "This is Nida's superstar sticker album! Let's collect them all!" : "นี่คือสมุดสติกเกอร์คนเก่งของน้องนิดาค่ะ สะสมให้ครบนะคะ!");
 }
 
 $('stickerClose').addEventListener('click', () => $('stickerOverlay').classList.remove('show'));
@@ -1931,7 +2307,7 @@ $('stickerClearBtn').addEventListener('click', () => {
   try { localStorage.removeItem('nida_stickers'); } catch(e){}
   renderStickerAlbum();
   SoundFX.boing();
-  speakText("เริ่มเก็บสติกเกอร์ใหม่แล้วค่ะ สู้ ๆ นะคะ!");
+  speakText(currentLang === 'en' ? "Sticker album reset! Let's collect them again!" : "เริ่มเก็บสติกเกอร์ใหม่แล้วค่ะ สู้ ๆ นะคะ!");
 });
 
 /* ============================================================
@@ -1939,12 +2315,12 @@ $('stickerClearBtn').addEventListener('click', () => {
    ============================================================ */
 let gachaSpinning = false;
 const GACHA_PRIZES = [
-  { text: "สติกเกอร์ถ้วยรางวัลคนเก่ง 🏆", type: 'sticker', id: 'trophy' },
-  { text: "สติกเกอร์ยูนิคอร์นสายรุ้ง 🦄", type: 'sticker', id: 'unicorn' },
-  { text: "สติกเกอร์เพชรวิบวับ 💎", type: 'sticker', id: 'gem' },
-  { text: "มงกุฎเจ้าหญิงสุดสวย 👑", type: 'acc', key: 'Crown' },
-  { text: "ปีกนางฟ้าบินได้ 🧚", type: 'acc', key: 'Wings' },
-  { text: "ไม้กายสิทธิ์เสกเวทมนตร์ ✨", type: 'acc', key: 'Wand' }
+  { text: { th: "สติกเกอร์ถ้วยรางวัลคนเก่ง 🏆", en: "Superstar Trophy Sticker 🏆" }, type: 'sticker', id: 'trophy' },
+  { text: { th: "สติกเกอร์ยูนิคอร์นสายรุ้ง 🦄", en: "Rainbow Unicorn Sticker 🦄" }, type: 'sticker', id: 'unicorn' },
+  { text: { th: "สติกเกอร์เพชรวิบวับ 💎", en: "Sparkling Gem Sticker 💎" }, type: 'sticker', id: 'gem' },
+  { text: { th: "มงกุฎเจ้าหญิงสุดสวย 👑", en: "Princess Crown 👑" }, type: 'acc', key: 'Crown' },
+  { text: { th: "ปีกนางฟ้าบินได้ 🧚", en: "Fairy Wings 🧚" }, type: 'acc', key: 'Wings' },
+  { text: { th: "ไม้กายสิทธิ์เสกเวทมนตร์ ✨", en: "Magic Wand ✨" }, type: 'acc', key: 'Wand' }
 ];
 
 function openGachapon() {
@@ -1952,9 +2328,9 @@ function openGachapon() {
   SoundFX.boing();
   $('gachaPrizeZone').style.display = 'none';
   $('gachaMachine').style.display = 'flex';
-  $('gachaHint').textContent = 'แตะที่ปุ่มเพื่อหมุนไข่ลุ้นของขวัญ ✨';
+  $('gachaHint').textContent = currentLang === 'en' ? 'Tap the button to spin for a surprise! ✨' : 'แตะที่ปุ่มเพื่อหมุนไข่ลุ้นของขวัญ ✨';
   $('gachaOverlay').classList.add('show');
-  speakText("ตู้หมุนไข่ของน้องนิดาค่ะ มาหมุนลุ้นของเล่นกันเลย!");
+  speakText(currentLang === 'en' ? "Welcome to Nida's Gachapon! Turn the knob to win a prize!" : "ตู้หมุนไข่ของน้องนิดาค่ะ มาหมุนลุ้นของเล่นกันเลย!");
 }
 
 function turnGachapon() {
@@ -1966,7 +2342,7 @@ function turnGachapon() {
 
   const machine = $('gachaMachine');
   machine.classList.add('spinning');
-  $('gachaHint').textContent = 'ตู้ไข่กำลังหมุน กริ๊ก กริ๊ก กริ๊ก... 🌀';
+  $('gachaHint').textContent = currentLang === 'en' ? 'Gachapon is spinning... 🌀' : 'ตู้ไข่กำลังหมุน กริ๊ก กริ๊ก กริ๊ก... 🌀';
 
   setTimeout(() => {
     machine.classList.remove('spinning');
@@ -1974,9 +2350,9 @@ function turnGachapon() {
     const prizeZone = $('gachaPrizeZone');
     prizeZone.style.display = 'block';
 
-    // Pick prize
     const p = GACHA_PRIZES[Math.floor(Math.random() * GACHA_PRIZES.length)];
-    $('gachaPrizeText').textContent = p.text;
+    const pText = typeof p.text === 'object' ? (p.text[currentLang] || p.text.th) : p.text;
+    $('gachaPrizeText').textContent = pText;
     if (p.type === 'sticker') {
       myStickers[p.id] = true;
       try { localStorage.setItem('nida_stickers', JSON.stringify(myStickers)); } catch(e){}
@@ -1990,8 +2366,8 @@ function turnGachapon() {
 
     SoundFX.fanfare();
     launchConfetti(65);
-    speakText(`เย้! ได้ ${p.text} ค่ะ เก่งที่สุดเลย!`);
-    $('gachaHint').textContent = 'แตะที่ปุ่มเพื่อหมุนใหม่อีกรอบได้เลยนะคะ ✨';
+    speakText(currentLang === 'en' ? `Hooray! You won ${pText}! Fantastic!` : `เย้! ได้ ${pText} ค่ะ เก่งที่สุดเลย!`);
+    $('gachaHint').textContent = currentLang === 'en' ? 'Tap the button to spin again! ✨' : 'แตะที่ปุ่มเพื่อหมุนใหม่อีกรอบได้เลยนะคะ ✨';
     gachaSpinning = false;
   }, 1100);
 }
@@ -2003,6 +2379,169 @@ $('gachaEggAnim').addEventListener('click', () => {
 });
 $('gachaClose').addEventListener('click', () => $('gachaOverlay').classList.remove('show'));
 $('gachaOverlay').addEventListener('click', (e) => { if (e.target === $('gachaOverlay')) $('gachaOverlay').classList.remove('show'); });
+
+/* ============================================================
+   11. BILINGUAL LANGUAGE SYSTEM (🇹🇭 TH <-> 🇬🇧 EN)
+   ============================================================ */
+function applyLanguage(lang, announce = false) {
+  currentLang = (lang === 'en') ? 'en' : 'th';
+  document.documentElement.lang = currentLang;
+
+  // Language pill button
+  const lBtn = $('langToggleBtn');
+  if (lBtn) {
+    if (currentLang === 'en') {
+      lBtn.innerHTML = '🇬🇧<span class="lbl"> EN</span>';
+      lBtn.title = 'Switch to Thai / สลับเป็นภาษาไทย';
+    } else {
+      lBtn.innerHTML = '🇹🇭<span class="lbl"> TH</span>';
+      lBtn.title = 'สลับภาษา / Switch to English';
+    }
+  }
+
+  // App Title
+  const appTitle = $('appTitle');
+  if (appTitle) appTitle.textContent = currentLang === 'en' ? "ร้านน้องนิดา Nida's Shop" : "ร้านน้องนิดา";
+
+  // Character Switch button
+  setCharacterMode(currentCharMode);
+
+  // Sound toggle button label
+  const sBtn = $('soundToggle');
+  if (sBtn) {
+    sBtn.innerHTML = soundEnabled 
+      ? (currentLang === 'en' ? '🔊<span class="lbl"> Sound On</span>' : '🔊<span class="lbl"> เสียงเปิด</span>')
+      : (currentLang === 'en' ? '🔇<span class="lbl"> Muted</span>' : '🔇<span class="lbl"> ปิดเสียง</span>');
+  }
+
+  // Offline pill label
+  updateOnlineStatus();
+
+  // Install banner
+  const iTxt = $('installBannerText');
+  const iBtn = $('installBtn');
+  if (iTxt) iTxt.textContent = currentLang === 'en' ? '⭐ Install to home screen for full-screen play' : '⭐ ติดตั้งลงหน้าจอโฮมเพื่อเล่นแบบเต็มจอ';
+  if (iBtn) iBtn.textContent = currentLang === 'en' ? 'Install' : 'ติดตั้ง';
+
+  // Menu label & Activity Tabs
+  const menuLbl = $('menuLabel');
+  if (menuLbl) menuLbl.innerHTML = currentLang === 'en' ? '📋 Menu <small>Tap to switch</small>' : '📋 เมนู <small>แตะเพื่อเปลี่ยนหน้า</small>';
+
+  const tabLabels = {
+    tabBtnShop: currentLang === 'en' ? 'Shop' : 'ซื้อของ',
+    tabBtnFeed: currentLang === 'en' ? 'Feed' : 'ป้อนขนม',
+    tabBtnRoleplay: currentLang === 'en' ? 'Talk' : 'ชวนคุย',
+    tabBtnMoods: currentLang === 'en' ? 'Moods' : 'อารมณ์',
+    tabBtnDress: currentLang === 'en' ? 'Dress up' : 'แต่งตัว',
+    tabBtnFun: currentLang === 'en' ? 'Fun' : 'สนุก'
+  };
+  Object.entries(tabLabels).forEach(([id, text]) => {
+    const el = document.querySelector(`#${id} .tab-lbl`);
+    if (el) el.textContent = text;
+  });
+
+  // Shop Categories
+  if ($('catBtnAll')) $('catBtnAll').textContent = currentLang === 'en' ? '🌟 All' : '🌟 ทั้งหมด';
+  if ($('catBtnFresh')) $('catBtnFresh').textContent = currentLang === 'en' ? '🥦 Fresh' : '🥦 ผักผลไม้';
+  if ($('catBtnBakery')) $('catBtnBakery').textContent = currentLang === 'en' ? '🧁 Bakery' : '🧁 เบเกอรี่';
+  if ($('catBtnSweet')) $('catBtnSweet').textContent = currentLang === 'en' ? '🍭 Sweets' : '🍭 ขนมหวาน';
+
+  // Quest badge & reroll
+  if ($('questBadge')) $('questBadge').textContent = currentLang === 'en' ? '🎯 Bunny Quest' : '🎯 ภารกิจน้องกระต่าย';
+  if ($('questRerollBtn')) $('questRerollBtn').textContent = currentLang === 'en' ? '🎲 New' : '🎲 สุ่มใหม่';
+
+  // Cart action buttons
+  if ($('openScaleBtn')) $('openScaleBtn').textContent = currentLang === 'en' ? '⚖️ Scale' : '⚖️ ตาชั่ง';
+  if ($('clearCartBtn')) $('clearCartBtn').textContent = currentLang === 'en' ? '🔄 Clear' : '🔄 ล้าง';
+  if ($('checkoutBtn')) $('checkoutBtn').textContent = currentLang === 'en' ? '💰 Pay' : '💰 คิดเงิน';
+
+  // Roleplay 1-4 buttons
+  const rpLabels = currentLang === 'en'
+    ? ['Welcome 👋', 'Can I Help? 💬', 'How Much?', 'Thank You 💖']
+    : ['ต้อนรับ 👋', 'รับอะไรดี 💬', 'บอกราคา', 'ขอบคุณ 💖'];
+  document.querySelectorAll('#panel-roleplay .rp-lbl').forEach((el, idx) => {
+    if (rpLabels[idx]) el.textContent = rpLabels[idx];
+  });
+
+  // Mood buttons
+  const moodLabels = currentLang === 'en'
+    ? { happy: 'Happy', laugh: 'Laugh', surprise: 'Surprise', sleepy: 'Sleepy', dance: 'Dance', praise: 'Praise' }
+    : { happy: 'ดีใจ', laugh: 'หัวเราะ', surprise: 'ตกใจ', sleepy: 'ง่วงนอน', dance: 'เต้นระบำ', praise: 'ชมคนเก่ง' };
+  document.querySelectorAll('#panel-moods .mood-card').forEach(b => {
+    const lbl = b.querySelector('.mood-lbl');
+    if (lbl && moodLabels[b.dataset.mood]) lbl.textContent = moodLabels[b.dataset.mood];
+  });
+
+  // Dress buttons
+  if ($('dressRandomBtn')) $('dressRandomBtn').textContent = currentLang === 'en' ? '🎲 Random Outfit' : '🎲 สุ่มชุดให้หน่อย';
+  if ($('dressResetBtn')) $('dressResetBtn').textContent = currentLang === 'en' ? '✨ Remove All' : '✨ ถอดทั้งหมด';
+
+  // Fun buttons
+  const funLabels = currentLang === 'en'
+    ? { balloons: 'Balloons', piano: 'Piano', birthday: 'Birthday', gachapon: 'Gachapon', stickers: 'Stickers', photo: 'Photo', scene: 'Scenes', count: 'Counting' }
+    : { balloons: 'ลูกโป่ง', piano: 'เปียโน', birthday: 'วันเกิด', gachapon: 'หมุนไข่', stickers: 'สมุดสติกเกอร์', photo: 'ถ่ายรูป', scene: 'เปลี่ยนฉาก', count: 'นับเลข' };
+  document.querySelectorAll('#panel-fun .mood-card').forEach(b => {
+    const lbl = b.querySelector('.fun-lbl');
+    if (lbl && funLabels[b.dataset.fun]) lbl.textContent = funLabels[b.dataset.fun];
+  });
+  if ($('pianoClose')) $('pianoClose').textContent = currentLang === 'en' ? '⬅️ Back' : '⬅️ กลับ';
+
+  // Modals texts
+  if ($('drawerSub')) $('drawerSub').textContent = currentLang === 'en' ? 'Tap banknotes or coins to pay' : 'แตะเลือกธนบัตรหรือเหรียญที่ต้องการจ่ายนะคะ';
+  if ($('drawerSecBills')) $('drawerSecBills').textContent = currentLang === 'en' ? '💵 Banknotes' : '💵 ธนบัตร';
+  if ($('drawerSecCoins')) $('drawerSecCoins').textContent = currentLang === 'en' ? '🪙 Coins' : '🪙 เหรียญ';
+
+  if ($('basketTitle')) $('basketTitle').textContent = currentLang === 'en' ? "🛒 Nida's Basket 🛒" : '🛒 ตะกร้าของน้องนิดา 🛒';
+  if ($('basketClearBtn')) $('basketClearBtn').textContent = currentLang === 'en' ? '🔄 Clear Cart' : '🔄 ล้างตะกร้า';
+  if ($('basketPayBtn')) $('basketPayBtn').textContent = currentLang === 'en' ? '💰 Checkout' : '💰 ไปคิดเงินเลย';
+
+  if ($('scaleTitle')) $('scaleTitle').textContent = currentLang === 'en' ? '⚖️ Digital Fruit Scale ⚖️' : '⚖️ เครื่องชั่งน้ำหนักผลไม้ดิจิทัล ⚖️';
+  if ($('scaleSecTitle')) $('scaleSecTitle').textContent = currentLang === 'en' ? 'Choose fruit to weigh:' : 'แตะเลือกผลไม้ที่ต้องการชั่ง:';
+  if ($('scaleAddBtn')) $('scaleAddBtn').textContent = currentLang === 'en' ? '🏷️ Print Price Tag & Add to Cart!' : '🏷️ พิมพ์ป้ายราคา & ใส่ตะกร้า!';
+
+  if ($('cakeTitle')) $('cakeTitle').textContent = currentLang === 'en' ? "🎶 Nida's Birthday 🎶" : '🎶 วันเกิดน้องนิดา 🎶';
+  if ($('cakeHint')) $('cakeHint').textContent = currentLang === 'en' ? 'Tap the cake to blow out candles 💨' : 'แตะที่เค้กเพื่อเป่าเทียน 💨';
+
+  if ($('photoHint')) $('photoHint').textContent = currentLang === 'en' ? 'Mobile: Long press photo to save' : 'มือถือ: กดค้างที่รูปเพื่อบันทึกได้เลย';
+  if ($('photoSave')) $('photoSave').textContent = currentLang === 'en' ? '💾 Save Photo' : '💾 บันทึกรูป';
+  if ($('photoClose')) $('photoClose').textContent = currentLang === 'en' ? '✕ Close' : '✕ ปิด';
+
+  if ($('receiptShopName')) $('receiptShopName').textContent = currentLang === 'en' ? "🐰 Nida's Shop 🐰" : '🐰 ร้านน้องนิดา 🐰';
+  if ($('receiptTagline')) $('receiptTagline').textContent = currentLang === 'en' ? '✨ Super Cute Receipt ✨' : '✨ ใบเสร็จรับเงินสุดน่ารัก ✨';
+  if ($('receiptThanks')) $('receiptThanks').textContent = currentLang === 'en' ? '* Thank you, lovely customer! *' : '* ขอบคุณลูกค้าน่ารักนะคะ *';
+  if ($('receiptCloseBtn')) $('receiptCloseBtn').textContent = currentLang === 'en' ? '✂️ Tear Receipt / Close' : '✂️ ฉีกใบเสร็จ / ปิด';
+
+  if ($('gachaTitle')) $('gachaTitle').textContent = currentLang === 'en' ? '🎁 Surprise Gachapon 🎁' : '🎁 ตู้หมุนไข่เซอร์ไพรส์ 🎁';
+  if ($('gachaTurnLbl')) $('gachaTurnLbl').textContent = currentLang === 'en' ? 'Turn Knob!' : 'หมุนตู้ไข่!';
+  if ($('gachaHint')) $('gachaHint').textContent = currentLang === 'en' ? 'Tap the button to spin for a surprise! ✨' : 'แตะที่ปุ่มเพื่อหมุนไข่ลุ้นของขวัญ ✨';
+
+  if ($('stickerTitle')) $('stickerTitle').textContent = currentLang === 'en' ? '🌟 Superstar Sticker Album 🌟' : '🌟 สมุดสติกเกอร์คนเก่ง 🌟';
+  if ($('stickerSubtitle')) $('stickerSubtitle').textContent = currentLang === 'en' ? "Nida's Album (Tap stickers to inspect)" : 'ของน้องนิดา (แตะสติกเกอร์เพื่อสะสมลงสมุด)';
+  if ($('stickerClearBtn')) $('stickerClearBtn').textContent = currentLang === 'en' ? '🔄 Reset Album' : '🔄 เริ่มเก็บใหม่';
+
+  // Re-render UI components
+  renderProducts();
+  renderFeedShelf();
+  updateCartDisplay();
+  renderQuest();
+  buildDressUI();
+
+  try { localStorage.setItem('nida_lang', currentLang); } catch(e){}
+
+  if (announce) {
+    const welcome = currentLang === 'en' 
+      ? "Welcome to Nida's Shop! Let's play and learn English together!" 
+      : "สลับเป็นภาษาไทยแล้วค่ะ มาเล่นด้วยกันนะ!";
+    speakText(welcome);
+  }
+}
+
+$('langToggleBtn').addEventListener('click', () => {
+  getAudioContext();
+  SoundFX.boing();
+  const nextLang = currentLang === 'th' ? 'en' : 'th';
+  applyLanguage(nextLang, true);
+});
 
 /* ---- wire up ---- */
 buildPiano();
@@ -2021,6 +2560,9 @@ document.querySelectorAll('[data-fun]').forEach(b => {
   b.addEventListener('click', () => { getAudioContext(); const f = FUN_ACTIONS[b.dataset.fun]; if (f) f(); });
 });
 
-renderProducts();
-renderFeedShelf();
+buildDressUI();
+applyOutfit();
+applyDressColor();
+renderStars();
 newQuest();
+applyLanguage(currentLang, false);
