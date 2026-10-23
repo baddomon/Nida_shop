@@ -1987,34 +1987,144 @@ function nextScene() {
   speakText(getItemTalk(SCENES[next]));
 }
 
-/* ---- Balloons: pop them in any order, bunny counts the number ---- */
+/* ---- Balloons: 4 Interactive Modes (Numbers, Colors, Surprise Toys, Melody) ---- */
+let currentBalloonMode = 'numbers';
+let balloonInterval = null;
+let balloonTimeouts = [];
+
 const BALLOON_COLORS = ['#ff5c8a', '#ffa21f', '#2fbf7e', '#4a8dff', '#a855f7', '#ff7a5c'];
-function startBalloons() {
-  const layer = $('balloonLayer'); layer.innerHTML = '';
+
+const BALLOON_COLOR_ITEMS = [
+  { id: 'pink',   hex: '#ff5c8a', th: 'สีชมพู', en: 'Pink',   emoji: '🌸' },
+  { id: 'orange', hex: '#ffa21f', th: 'สีส้ม',   en: 'Orange', emoji: '🍊' },
+  { id: 'yellow', hex: '#f6c426', th: 'สีเหลือง', en: 'Yellow', emoji: '⭐' },
+  { id: 'green',  hex: '#2fbf7e', th: 'สีเขียว', en: 'Green',  emoji: '🍏' },
+  { id: 'blue',   hex: '#3a86ff', th: 'สีฟ้า',   en: 'Blue',   emoji: '🌊' },
+  { id: 'purple', hex: '#9d4edd', th: 'สีม่วง',  en: 'Purple', emoji: '🍇' },
+  { id: 'red',    hex: '#ef233c', th: 'สีแดง',   en: 'Red',    emoji: '🍎' }
+];
+
+const BALLOON_SURPRISE_TOYS = [
+  { emoji: '🧸', th: 'ตุ๊กตาหมี', en: 'Teddy Bear' },
+  { emoji: '🍰', th: 'เค้กสตรอว์เบอร์รี', en: 'Strawberry Cake' },
+  { emoji: '👑', th: 'มงกุฎเจ้าหญิง', en: 'Princess Crown' },
+  { emoji: '🦄', th: 'ยูนิคอร์นวิเศษ', en: 'Unicorn' },
+  { emoji: '💎', th: 'เพชรวิบวับ', en: 'Sparkling Diamond' },
+  { emoji: '🍭', th: 'อมยิ้มสายรุ้ง', en: 'Rainbow Lollipop' },
+  { emoji: '🍦', th: 'ไอศกรีมหวานเย็น', en: 'Ice Cream' },
+  { emoji: '🐱', th: 'ลูกแมวเหมียว', en: 'Cute Kitten' },
+  { emoji: '🐰', th: 'กระต่ายน้อย', en: 'Sweet Bunny' },
+  { emoji: '🌸', th: 'ดอกไม้น่ารัก', en: 'Pretty Flower' },
+  { emoji: '⭐', th: 'ดาวนำโชค', en: 'Lucky Star' },
+  { emoji: '🚗', th: 'รถของเล่นจิ๋ว', en: 'Toy Car' }
+];
+
+const BALLOON_MELODY_NOTES = [
+  { note: 'โด', label: 'C', freq: 261.63, color: '#ff5c8a' },
+  { note: 'เร', label: 'D', freq: 293.66, color: '#ffa21f' },
+  { note: 'มี', label: 'E', freq: 329.63, color: '#f6c426' },
+  { note: 'ซอล', label: 'G', freq: 392.00, color: '#2fbf7e' },
+  { note: 'ลา', label: 'A', freq: 440.00, color: '#3a86ff' },
+  { note: 'โดสูง', label: 'C5', freq: 523.25, color: '#9d4edd' },
+  { note: 'เรสูง', label: 'D5', freq: 587.33, color: '#ff65a5' }
+];
+
+let currentColorTarget = null;
+let colorMatches = 0;
+const COLOR_MATCH_GOAL = 5;
+
+let surprisePops = 0;
+const SURPRISE_GOAL = 8;
+
+let melodyPops = 0;
+
+function spawnBalloonPopFloat(emoji, x, y) {
+  const el = document.createElement('div');
+  el.className = 'balloon-pop-float';
+  el.textContent = emoji;
+  el.style.left = `${x || window.innerWidth / 2}px`;
+  el.style.top = `${y || window.innerHeight / 2}px`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1100);
+}
+
+function stopBalloons() {
+  if (balloonInterval) { clearInterval(balloonInterval); balloonInterval = null; }
+  balloonTimeouts.forEach(t => clearTimeout(t));
+  balloonTimeouts = [];
+  document.querySelectorAll('#balloonLayer .balloon').forEach(b => b.remove());
+  const hud = $('balloonHud');
+  if (hud) hud.style.display = 'none';
+  const layer = $('balloonLayer');
+  if (layer) layer.classList.remove('active');
+}
+
+function startBalloons(mode = 'numbers') {
+  stopBalloons();
+  currentBalloonMode = mode;
+  const layer = $('balloonLayer');
+  if (layer) layer.classList.add('active');
+  const hud = $('balloonHud');
+  if (hud) hud.style.display = 'flex';
+
+  document.querySelectorAll('.b-mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.bmode === mode);
+  });
+
+  if (mode === 'colors') {
+    launchColorsMode();
+  } else if (mode === 'surprise') {
+    launchSurpriseMode();
+  } else if (mode === 'melody') {
+    launchMelodyMode();
+  } else {
+    launchNumbersMode();
+  }
+}
+
+function launchNumbersMode() {
+  const layer = $('balloonLayer');
+  const banner = $('balloonBanner');
+  if (banner) {
+    banner.style.display = 'flex';
+    banner.innerHTML = '🔢 ' + (currentLang === 'en' ? 'Pop numbers 1 to 10!' : 'แตะนับเลข 1 ถึง 10 ให้ครบนะ!');
+  }
+  speakText(currentLang === 'en' ? 'Tap balloons to pop them and count numbers together!' : 'แตะลูกโป่งให้แตก แล้วนับเลขไปด้วยกันนะคะ');
+
   const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].sort(() => Math.random() - 0.5);
   let remaining = nums.length, popped = 0;
+
   const finishOne = () => {
     if (--remaining > 0) return;
+    if (currentBalloonMode !== 'numbers') return;
     if (popped === nums.length) {
       stars++; try { localStorage.setItem('nida_stars', String(stars)); } catch(e){}
       renderStars();
       SoundFX.fanfare(); launchConfetti(70);
+      if (banner) banner.innerHTML = '🎉 ' + (currentLang === 'en' ? 'Awesome! 10/10 popped! ⭐' : 'เก่งมาก แตกครบ 10 ลูกแล้ว! ⭐');
       speakText(currentLang === 'en'
         ? 'Great job! You popped all ten balloons! You get one bonus star!'
         : 'เก่งมากเลยค่ะ แตกครบสิบลูกแล้ว ได้ดาวเพิ่มอีกหนึ่งดวง!');
+      const t = setTimeout(() => {
+        if (currentBalloonMode === 'numbers' && $('balloonLayer') && $('balloonLayer').classList.contains('active')) {
+          launchNumbersMode();
+        }
+      }, 3500);
+      balloonTimeouts.push(t);
     } else if (popped > 0) {
       speakText(currentLang === 'en'
         ? 'The balloons flew away! Would you like to play again?'
         : 'ลูกโป่งลอยไปหมดแล้วค่ะ เล่นอีกรอบไหมคะ');
     }
   };
+
   nums.forEach((n, i) => {
     const el = document.createElement('div');
     el.className = 'balloon'; el.textContent = n;
     el.style.background = `radial-gradient(circle at 35% 30%, #fff8 0, transparent 38%), ${BALLOON_COLORS[i % BALLOON_COLORS.length]}`;
     el.style.left = `${rand(4, 84).toFixed(1)}%`;
     el.style.setProperty('--dur', `${rand(8, 12).toFixed(1)}s`);
-    el.style.setProperty('--delay', `${(i * 0.5).toFixed(1)}s`);
+    el.style.setProperty('--delay', `${(i * 0.45).toFixed(1)}s`);
     el.style.setProperty('--sway', `${Math.round(rand(14, 30))}px`);
     let gone = false;
     el.addEventListener('animationend', () => { if (gone) return; gone = true; el.remove(); finishOne(); });
@@ -2040,7 +2150,259 @@ function startBalloons() {
     el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
     layer.appendChild(el);
   });
-  speakText(currentLang === 'en' ? 'Tap balloons to pop them and count numbers together!' : 'แตะลูกโป่งให้แตก แล้วนับเลขไปด้วยกันนะคะ');
+}
+
+function launchColorsMode() {
+  colorMatches = 0;
+  const layer = $('balloonLayer');
+
+  const pickTarget = (announce = true) => {
+    currentColorTarget = BALLOON_COLOR_ITEMS[Math.floor(Math.random() * BALLOON_COLOR_ITEMS.length)];
+    const banner = $('balloonBanner');
+    if (banner) {
+      banner.style.display = 'flex';
+      const cName = currentLang === 'en' ? currentColorTarget.en : currentColorTarget.th;
+      banner.innerHTML = `🎨 <span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:${currentColorTarget.hex};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);vertical-align:middle;margin-right:2px;"></span> ${currentLang === 'en' ? 'Find' : 'หา'}: <strong>${cName}</strong> (${colorMatches}/${COLOR_MATCH_GOAL})`;
+    }
+    if (announce) {
+      const q = currentLang === 'en' 
+        ? `Can you find the ${currentColorTarget.en} balloon?` 
+        : `หาลูกโป่ง${currentColorTarget.th} ให้หน่อยนะคะ`;
+      speakText(q);
+    }
+  };
+
+  pickTarget(true);
+
+  const spawnBalloon = () => {
+    if (currentBalloonMode !== 'colors') return;
+    if (layer.querySelectorAll('.balloon').length >= 8) return;
+
+    // 45% chance of picking current target
+    const bColor = (Math.random() < 0.45 && currentColorTarget)
+      ? currentColorTarget
+      : BALLOON_COLOR_ITEMS[Math.floor(Math.random() * BALLOON_COLOR_ITEMS.length)];
+
+    const el = document.createElement('div');
+    el.className = 'balloon';
+    el.textContent = bColor.emoji;
+    el.style.fontSize = '24px';
+    el.style.background = `radial-gradient(circle at 35% 30%, #fff8 0, transparent 38%), ${bColor.hex}`;
+    el.style.left = `${rand(5, 85).toFixed(1)}%`;
+    el.style.setProperty('--dur', `${rand(7.5, 11).toFixed(1)}s`);
+    el.style.setProperty('--sway', `${Math.round(rand(14, 28))}px`);
+
+    let gone = false;
+    el.addEventListener('animationend', () => { if (gone) return; gone = true; el.remove(); });
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); if (gone) return; gone = true;
+      getAudioContext();
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const m = getComputedStyle(el).transform;
+      const base = m && m !== 'none' ? m + ' ' : '';
+      el.style.animation = 'none';
+      el.style.transform = base;
+      void el.offsetWidth;
+      el.classList.add('pop');
+      el.style.transform = base + 'scale(1.7)';
+      setTimeout(() => el.remove(), 450);
+
+      if (currentColorTarget && bColor.id === currentColorTarget.id) {
+        SoundFX.pop();
+        SoundFX.sparkle();
+        launchConfetti(22, cx, cy);
+        spawnBalloonPopFloat(bColor.emoji, cx, cy);
+        colorMatches++;
+
+        if (colorMatches >= COLOR_MATCH_GOAL) {
+          stars++; try { localStorage.setItem('nida_stars', String(stars)); } catch(e){}
+          renderStars();
+          SoundFX.fanfare(); launchConfetti(80);
+          const banner = $('balloonBanner');
+          if (banner) banner.innerHTML = '🌟 ' + (currentLang === 'en' ? 'Color Champion! Bonus Star! ⭐' : 'ยอดนักทายสี ได้รับดาว! ⭐');
+          speakText(currentLang === 'en' ? 'Super color master! You won a bonus star!' : 'คนเก่งทายสีครบแล้วค่ะ รับดาวไปเลยหนึ่งดวง!');
+          colorMatches = 0;
+          const t = setTimeout(() => {
+            if (currentBalloonMode === 'colors') pickTarget(true);
+          }, 3200);
+          balloonTimeouts.push(t);
+        } else {
+          const praise = currentLang === 'en' ? `Correct! It's ${bColor.en}!` : `เก่งมากค่ะ ${bColor.th} ถูกต้อง!`;
+          speakText(praise);
+          const t = setTimeout(() => {
+            if (currentBalloonMode === 'colors') pickTarget(true);
+          }, 1100);
+          balloonTimeouts.push(t);
+        }
+      } else {
+        SoundFX.pop();
+        launchConfetti(8, cx, cy);
+        const hint = currentLang === 'en' 
+          ? `That's ${bColor.en}! Try finding ${currentColorTarget ? currentColorTarget.en : 'the right color'}!` 
+          : `นี่คือ${bColor.th}ค่ะ ลองหา${currentColorTarget ? currentColorTarget.th : 'สีที่ถูกต้อง'}ดูใหม่นะ!`;
+        speakText(hint);
+      }
+    });
+    el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
+    layer.appendChild(el);
+  };
+
+  for (let i = 0; i < 4; i++) {
+    const t = setTimeout(spawnBalloon, i * 350);
+    balloonTimeouts.push(t);
+  }
+  balloonInterval = setInterval(spawnBalloon, 1400);
+}
+
+function launchSurpriseMode() {
+  surprisePops = 0;
+  const layer = $('balloonLayer');
+  const banner = $('balloonBanner');
+  if (banner) {
+    banner.style.display = 'flex';
+    banner.innerHTML = '🎁 ' + (currentLang === 'en' ? `Mystery Surprise Balloons! (0/${SURPRISE_GOAL})` : `แตะลูกโป่งปริศนา ลุ้นของขวัญข้างใน! (0/${SURPRISE_GOAL})`);
+  }
+  speakText(currentLang === 'en' 
+    ? 'Mystery surprise balloons! Pop them to find hidden toys!' 
+    : 'ลูกโป่งกล่องของขวัญปริศนา แตะเปิดดูของเล่นข้างในกันค่ะ');
+
+  const spawnBalloon = () => {
+    if (currentBalloonMode !== 'surprise') return;
+    if (layer.querySelectorAll('.balloon').length >= 7) return;
+
+    const el = document.createElement('div');
+    el.className = 'balloon b-toy';
+    const icons = ['🎁', '✨', '❓', '🎀'];
+    el.textContent = icons[Math.floor(Math.random() * icons.length)];
+    el.style.fontSize = '24px';
+    const c = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
+    el.style.background = `radial-gradient(circle at 35% 30%, #fffb 0, transparent 40%), ${c}`;
+    el.style.left = `${rand(5, 85).toFixed(1)}%`;
+    el.style.setProperty('--dur', `${rand(7.5, 11).toFixed(1)}s`);
+    el.style.setProperty('--sway', `${Math.round(rand(14, 28))}px`);
+
+    let gone = false;
+    el.addEventListener('animationend', () => { if (gone) return; gone = true; el.remove(); });
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); if (gone) return; gone = true;
+      getAudioContext();
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const m = getComputedStyle(el).transform;
+      const base = m && m !== 'none' ? m + ' ' : '';
+      el.style.animation = 'none';
+      el.style.transform = base;
+      void el.offsetWidth;
+      el.classList.add('pop');
+      el.style.transform = base + 'scale(1.7)';
+      setTimeout(() => el.remove(), 450);
+
+      const toy = BALLOON_SURPRISE_TOYS[Math.floor(Math.random() * BALLOON_SURPRISE_TOYS.length)];
+      surprisePops++;
+      SoundFX.pop();
+      SoundFX.sparkle();
+      spawnBalloonPopFloat(toy.emoji, cx, cy);
+      launchConfetti(22, cx, cy);
+
+      const toyName = currentLang === 'en' ? toy.en : toy.th;
+      if (banner) {
+        banner.innerHTML = `🎁 ${toy.emoji} <strong>${toyName}</strong> (${Math.min(surprisePops, SURPRISE_GOAL)}/${SURPRISE_GOAL})`;
+      }
+
+      if (surprisePops >= SURPRISE_GOAL) {
+        stars++; try { localStorage.setItem('nida_stars', String(stars)); } catch(e){}
+        renderStars();
+        SoundFX.fanfare(); launchConfetti(80);
+        if (banner) banner.innerHTML = '🏆 ' + (currentLang === 'en' ? 'Toy Collector Superstar! ⭐' : 'สุดยอดนักสะสมของขวัญ ได้รับดาว! ⭐');
+        speakText(currentLang === 'en' 
+          ? 'Hooray! You collected all surprise toys! Bonus star for you!' 
+          : 'เย้! สะสมของขวัญครบแล้ว เก่งมากเลยค่ะ รับดาวไปเลยหนึ่งดวง!');
+        surprisePops = 0;
+      } else {
+        const cheer = currentLang === 'en' ? `Wow! A ${toy.en}!` : `ว้าว! ได้${toy.th}!`;
+        speakText(cheer);
+      }
+    });
+    el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
+    layer.appendChild(el);
+  };
+
+  for (let i = 0; i < 4; i++) {
+    const t = setTimeout(spawnBalloon, i * 360);
+    balloonTimeouts.push(t);
+  }
+  balloonInterval = setInterval(spawnBalloon, 1450);
+}
+
+function launchMelodyMode() {
+  melodyPops = 0;
+  const layer = $('balloonLayer');
+  const banner = $('balloonBanner');
+  if (banner) {
+    banner.style.display = 'flex';
+    banner.innerHTML = '🎶 ' + (currentLang === 'en' ? 'Musical Balloons: Pop to play melody!' : 'ลูกโป่งดนตรี แตะเพื่อบรรเลงเสียงเพลงแสนหวาน!');
+  }
+  speakText(currentLang === 'en' 
+    ? 'Musical balloons! Pop them quickly to play a cheerful song!' 
+    : 'ลูกโป่งดนตรี แตะต่อกันเร็วๆ เพื่อบรรเลงเพลงเพราะๆ นะคะ');
+
+  const spawnBalloon = () => {
+    if (currentBalloonMode !== 'melody') return;
+    if (layer.querySelectorAll('.balloon').length >= 8) return;
+
+    const noteItem = BALLOON_MELODY_NOTES[Math.floor(Math.random() * BALLOON_MELODY_NOTES.length)];
+    const el = document.createElement('div');
+    el.className = 'balloon b-melody';
+    el.textContent = currentLang === 'en' ? noteItem.label : noteItem.note;
+    el.style.background = `radial-gradient(circle at 35% 30%, #fff9 0, transparent 38%), ${noteItem.color}`;
+    el.style.left = `${rand(5, 85).toFixed(1)}%`;
+    el.style.setProperty('--dur', `${rand(7.5, 11).toFixed(1)}s`);
+    el.style.setProperty('--sway', `${Math.round(rand(14, 28))}px`);
+
+    let gone = false;
+    el.addEventListener('animationend', () => { if (gone) return; gone = true; el.remove(); });
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); if (gone) return; gone = true;
+      getAudioContext();
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const m = getComputedStyle(el).transform;
+      const base = m && m !== 'none' ? m + ' ' : '';
+      el.style.animation = 'none';
+      el.style.transform = base;
+      void el.offsetWidth;
+      el.classList.add('pop');
+      el.style.transform = base + 'scale(1.7)';
+      setTimeout(() => el.remove(), 450);
+
+      melodyPops++;
+      SoundFX.note(noteItem.freq, 0.45, 0.35);
+      spawnBalloonPopFloat('🎵', cx, cy);
+      launchConfetti(10, cx, cy);
+
+      if (banner) {
+        banner.innerHTML = `🎶 ${currentLang === 'en' ? 'Notes played' : 'บรรเลงไปแล้ว'}: <strong>${melodyPops}</strong> 🎵`;
+      }
+
+      if (melodyPops % 10 === 0) {
+        setMood('dance');
+        SoundFX.sparkle();
+        speakText(currentLang === 'en' ? 'Such beautiful music!' : 'เพลงเพราะจับใจเลยค่ะ!');
+      }
+    });
+    el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
+    layer.appendChild(el);
+  };
+
+  for (let i = 0; i < 4; i++) {
+    const t = setTimeout(spawnBalloon, i * 350);
+    balloonTimeouts.push(t);
+  }
+  balloonInterval = setInterval(spawnBalloon, 1300);
 }
 
 /* ---- Piano ---- */
@@ -2519,6 +2881,17 @@ function applyLanguage(lang, announce = false) {
   if ($('stickerSubtitle')) $('stickerSubtitle').textContent = currentLang === 'en' ? "Nida's Album (Tap stickers to inspect)" : 'ของน้องนิดา (แตะสติกเกอร์เพื่อสะสมลงสมุด)';
   if ($('stickerClearBtn')) $('stickerClearBtn').textContent = currentLang === 'en' ? '🔄 Reset Album' : '🔄 เริ่มเก็บใหม่';
 
+  // Balloon HUD
+  const bmNumbers = document.querySelector('#bModeNumbers .bm-lbl');
+  if (bmNumbers) bmNumbers.textContent = currentLang === 'en' ? 'Numbers' : 'นับเลข';
+  const bmColors = document.querySelector('#bModeColors .bm-lbl');
+  if (bmColors) bmColors.textContent = currentLang === 'en' ? 'Colors' : 'ทายสี';
+  const bmSurprise = document.querySelector('#bModeSurprise .bm-lbl');
+  if (bmSurprise) bmSurprise.textContent = currentLang === 'en' ? 'Surprise' : 'ซ่อนของขวัญ';
+  const bmMelody = document.querySelector('#bModeMelody .bm-lbl');
+  if (bmMelody) bmMelody.textContent = currentLang === 'en' ? 'Music' : 'ดนตรี';
+  if ($('balloonQuitBtn')) $('balloonQuitBtn').title = currentLang === 'en' ? 'Close Balloon Game' : 'ปิดเกมลูกโป่ง';
+
   // Re-render UI components
   renderProducts();
   renderFeedShelf();
@@ -2547,7 +2920,7 @@ $('langToggleBtn').addEventListener('click', () => {
 buildPiano();
 setScene(currentScene);
 const FUN_ACTIONS = {
-  balloons: startBalloons,
+  balloons: () => startBalloons(currentBalloonMode || 'numbers'),
   piano: openPiano,
   birthday: openBirthday,
   gachapon: openGachapon,
@@ -2559,6 +2932,25 @@ const FUN_ACTIONS = {
 document.querySelectorAll('[data-fun]').forEach(b => {
   b.addEventListener('click', () => { getAudioContext(); const f = FUN_ACTIONS[b.dataset.fun]; if (f) f(); });
 });
+
+// Balloon HUD buttons
+document.querySelectorAll('.b-mode-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    getAudioContext();
+    SoundFX.boing();
+    startBalloons(btn.dataset.bmode);
+  });
+});
+if ($('balloonQuitBtn')) {
+  $('balloonQuitBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    getAudioContext();
+    SoundFX.boing();
+    stopBalloons();
+    speakText(currentLang === 'en' ? 'See you next time, balloon party!' : 'ไว้มาเล่นลูกโป่งใหม่นะคะ');
+  });
+}
 
 buildDressUI();
 applyOutfit();

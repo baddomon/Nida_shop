@@ -398,7 +398,18 @@
   </div>
 </div>
 
-<div id="balloonLayer" aria-hidden="true"></div>
+<div id="balloonLayer" aria-hidden="true">
+  <div class="balloon-hud" id="balloonHud" style="display:none;">
+    <div class="balloon-modes" id="balloonModes">
+      <button type="button" class="b-mode-btn active" data-bmode="numbers" id="bModeNumbers">🔢 <span class="bm-lbl">นับเลข</span></button>
+      <button type="button" class="b-mode-btn" data-bmode="colors" id="bModeColors">🎨 <span class="bm-lbl">ทายสี</span></button>
+      <button type="button" class="b-mode-btn" data-bmode="surprise" id="bModeSurprise">🎁 <span class="bm-lbl">ซ่อนของขวัญ</span></button>
+      <button type="button" class="b-mode-btn" data-bmode="melody" id="bModeMelody">🎶 <span class="bm-lbl">ดนตรี</span></button>
+    </div>
+    <div class="balloon-banner" id="balloonBanner" style="display:none;"></div>
+    <button type="button" class="balloon-quit-btn" id="balloonQuitBtn" title="ปิดเกมลูกโป่ง">✕</button>
+  </div>
+</div>
 
 <!-- Receipt Modal Overlay -->
 <div class="receipt-overlay" id="receiptOverlay">

@@ -1179,11 +1179,110 @@ h1 {
 
 /* ---------- balloons ---------- */
 #balloonLayer { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
+#balloonLayer.active {
+  pointer-events: auto;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 230, 243, 0.45) 0%, rgba(220, 235, 255, 0.45) 100%);
+  backdrop-filter: blur(1.5px);
+}
+.balloon-hud {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+  pointer-events: auto;
+  padding: 0 54px 0 12px;
+}
+.balloon-modes {
+  display: flex;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 4px 6px;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(255, 126, 182, 0.3);
+  border: 1.5px solid #ff7eb6;
+  max-width: 90vw;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.balloon-modes::-webkit-scrollbar { display: none; }
+.b-mode-btn {
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.b-mode-btn:active { transform: scale(0.92); }
+.b-mode-btn.active {
+  background: linear-gradient(135deg, #ff65a5, #ff8bb5);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(255, 101, 165, 0.4);
+}
+.balloon-quit-btn {
+  position: absolute;
+  top: 2px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  background: linear-gradient(135deg, #ff4d6d, #e63956);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(230, 57, 86, 0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+.balloon-quit-btn:active { transform: scale(0.9); }
+.balloon-banner {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #ffd23f;
+  padding: 5px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #d92d6b;
+  box-shadow: 0 4px 14px rgba(255, 181, 46, 0.3);
+  animation: bannerPulse 1.4s ease-in-out infinite alternate;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+@keyframes bannerPulse {
+  0% { transform: scale(0.98); }
+  100% { transform: scale(1.02); }
+}
+
 .balloon {
   position: absolute; bottom: -100px; width: 58px; height: 70px; border-radius: 50% 50% 46% 46%; pointer-events: auto; cursor: pointer; touch-action: manipulation;
   display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; color: #fff; text-shadow: 0 2px 3px rgba(0,0,0,.3);
   box-shadow: inset -8px -10px 14px rgba(0,0,0,.14), inset 8px 8px 12px rgba(255,255,255,.35);
   animation: balloonRise var(--dur, 9s) linear var(--delay, 0s) forwards;
+}
+.balloon.b-toy {
+  box-shadow: inset -8px -10px 14px rgba(0,0,0,.18), inset 8px 8px 14px rgba(255,255,255,.45), 0 0 16px rgba(255,215,0,0.5);
+}
+.balloon.b-melody {
+  font-size: 22px;
 }
 .balloon::before { content: ''; position: absolute; inset: -12px; }
 .balloon::after { content: ''; position: absolute; left: 50%; top: 100%; width: 2px; height: 34px; background: rgba(120,80,110,.45); transform: translateX(-50%); }
@@ -1195,6 +1294,23 @@ h1 {
   100% { transform: translate(0, -150vh); }
 }
 .balloon.pop { transition: transform .18s ease-out, opacity .18s; opacity: 0; }
+
+.balloon-pop-float {
+  position: fixed;
+  pointer-events: none;
+  z-index: 80;
+  font-size: 38px;
+  transform: translate(-50%, -50%) scale(0.6);
+  animation: popFloatUp 1.1s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
+  will-change: transform, opacity;
+}
+@keyframes popFloatUp {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  25% { transform: translate(-50%, -60px) scale(1.35); opacity: 1; }
+  75% { transform: translate(-50%, -100px) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%, -140px) scale(0.7); opacity: 0; }
+}
 
 /* ---------- birthday cake ---------- */
 .cake-overlay, .photo-overlay { position: fixed; inset: 0; background: rgba(85,39,85,.6); display: none; align-items: center; justify-content: center; z-index: 55; padding: 16px; }
